@@ -23,6 +23,31 @@ class PodcastFeedViewModel(
     }
 
     override fun onIntent(intent: PodcastFeedIntent) {
+        when (intent) {
+            PodcastFeedIntent.ChangeSubscriptionStatus -> changeSubscriptionStatus()
+        }
+    }
+
+    private fun changeSubscriptionStatus() {
+        viewModelScope.launch {
+            if (lastContentState.podcastInfo.subscribed) {
+                podcastFeedRepository.unsubscribeOnPodcast(podcastId = id).onSuccess {
+                    updateState(
+                        lastContentState.copy(
+                            podcastInfo = lastContentState.podcastInfo.copy(subscribed = false)
+                        )
+                    )
+                }
+            } else {
+                podcastFeedRepository.subscribeOnPodcast(podcastId = id).onSuccess {
+                    updateState(
+                        lastContentState.copy(
+                            podcastInfo = lastContentState.podcastInfo.copy(subscribed = true)
+                        )
+                    )
+                }
+            }
+        }
     }
 
     private fun loadPodcastFeed() {

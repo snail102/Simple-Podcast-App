@@ -10,5 +10,6 @@ data class PodcastFeed(
     val description: String,
     val author: String,
     val image: String,
-    val episodeCount: Int
+    val episodeCount: Int,
+    val subscribed: Boolean
 )

@@ -6,5 +6,6 @@ data class PodcastInfo(
     val author: String = "",
     val imageUrl: String = "",
     val episodeCount: Int = 0,
-    val link: String = ""
+    val link: String = "",
+    val subscribed: Boolean = false
 )

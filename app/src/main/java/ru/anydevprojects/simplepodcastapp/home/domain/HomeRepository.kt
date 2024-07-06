@@ -1,8 +1,8 @@
 package ru.anydevprojects.simplepodcastapp.home.domain
 
-import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeed
+import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeedSearched
 
 interface HomeRepository {
 
-    suspend fun getPodcastFeedsByQuery(query: String): Result<List<PodcastFeed>>
+    suspend fun getPodcastFeedsByQuery(query: String): Result<List<PodcastFeedSearched>>
 }

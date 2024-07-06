@@ -10,6 +10,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import ru.anydevprojects.simplepodcastapp.home.presentation.HomeScreen
 import ru.anydevprojects.simplepodcastapp.home.presentation.HomeScreenNavigation
+import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.PodcastEpisodeScreen
+import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.PodcastEpisodeScreenNavigation
 import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.PodcastFeedScreen
 import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.PodcastFeedScreenNavigation
 import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
@@ -30,13 +32,33 @@ class MainActivity : ComponentActivity() {
                         HomeScreen(
                             onPodcastClick = { id ->
                                 navController.navigate(PodcastFeedScreenNavigation(podcastId = id))
+                            },
+                            onEpisodeClick = { podcastName, episodeId ->
+                                navController.navigate(
+                                    PodcastEpisodeScreenNavigation(
+                                        podcastName = podcastName,
+                                        episodeId = episodeId
+                                    )
+                                )
                             }
+
                         )
                     }
                     composable<PodcastFeedScreenNavigation> {
                         val args = it.toRoute<PodcastFeedScreenNavigation>()
                         PodcastFeedScreen(
                             podcastId = args.podcastId
+                        )
+                    }
+
+                    composable<PodcastEpisodeScreenNavigation> {
+                        val args = it.toRoute<PodcastEpisodeScreenNavigation>()
+                        PodcastEpisodeScreen(
+                            podcastName = args.podcastName,
+                            episodeId = args.episodeId,
+                            onBackClick = {
+                                navController.popBackStack()
+                            }
                         )
                     }
                 }

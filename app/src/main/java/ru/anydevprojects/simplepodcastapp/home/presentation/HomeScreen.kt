@@ -38,14 +38,18 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
-import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeed
+import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeedSearched
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeEvent
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeIntent
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeState
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastEpisodeUi
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = koinViewModel(), onPodcastClick: (Int) -> Unit) {
+fun HomeScreen(
+    onPodcastClick: (Int) -> Unit,
+    onEpisodeClick: (String, Int) -> Unit,
+    viewModel: HomeViewModel = koinViewModel()
+) {
     val state by viewModel.stateFlow.collectAsState()
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -89,14 +93,21 @@ fun HomeScreen(viewModel: HomeViewModel = koinViewModel(), onPodcastClick: (Int)
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                homeState = state
+                homeState = state,
+                onClick = {
+                    onEpisodeClick("name podcase", it)
+                }
             )
         }
     }
 }
 
 @Composable
-private fun ContentHomeScreen(homeState: HomeState, modifier: Modifier = Modifier) {
+private fun ContentHomeScreen(
+    homeState: HomeState,
+    onClick: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val isLoading = homeState is HomeState.Loading
 
     val podcastEpisodes: List<PodcastEpisodeUi> = if (homeState is HomeState.Content) {
@@ -125,7 +136,10 @@ private fun ContentHomeScreen(homeState: HomeState, modifier: Modifier = Modifie
             ) {
                 PodcastEpisodeItem(
                     modifier = Modifier.fillMaxWidth(),
-                    podcastEpisodeUi = it
+                    podcastEpisodeUi = it,
+                    onClick = {
+                        onClick(it.id)
+                    }
                 )
             }
         }
@@ -133,9 +147,15 @@ private fun ContentHomeScreen(homeState: HomeState, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun PodcastEpisodeItem(podcastEpisodeUi: PodcastEpisodeUi, modifier: Modifier = Modifier) {
+private fun PodcastEpisodeItem(
+    podcastEpisodeUi: PodcastEpisodeUi,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     ListItem(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier
+            .padding(16.dp)
+            .clickable { onClick() },
         headlineContent = {
             Text(podcastEpisodeUi.title)
         },
@@ -164,7 +184,7 @@ private fun SearchBarPodcastFeeds(
 ) {
     val isLoading: Boolean
     val query: String
-    val response: List<PodcastFeed>
+    val response: List<PodcastFeedSearched>
     val isActivate: Boolean
     val enabledClear: Boolean
     if (homeState is HomeState.SearchContent) {
@@ -261,7 +281,7 @@ private fun SearchBarPodcastFeeds(
 
 @Composable
 private fun PodcastFeedsItem(
-    podcastFeed: PodcastFeed,
+    podcastFeed: PodcastFeedSearched,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -274,6 +294,12 @@ private fun PodcastFeedsItem(
         headlineContent = {
             Text(
                 podcastFeed.title
+            )
+        },
+        supportingContent = {
+            Text(
+                podcastFeed.description,
+                maxLines = 3
             )
         },
         leadingContent = {
