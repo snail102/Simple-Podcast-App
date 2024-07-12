@@ -1,19 +1,46 @@
 package ru.anydevprojects.simplepodcastapp.home.presentation
 
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import ru.anydevprojects.simplepodcastapp.core.ui.BaseViewModel
 import ru.anydevprojects.simplepodcastapp.home.domain.HomeRepository
+import ru.anydevprojects.simplepodcastapp.home.presentation.mappers.toPodcastSubscriptionUi
+import ru.anydevprojects.simplepodcastapp.home.presentation.mappers.toUi
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeEvent
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeIntent
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeState
+import ru.anydevprojects.simplepodcastapp.podcastEpisode.domain.PodcastEpisodeRepository
+import ru.anydevprojects.simplepodcastapp.podcastFeed.domain.PodcastFeedRepository
 
-class HomeViewModel(private val homeRepository: HomeRepository) :
+class HomeViewModel(
+    private val homeRepository: HomeRepository,
+    private val podcastEpisodeRepository: PodcastEpisodeRepository,
+    private val podcastFeedRepository: PodcastFeedRepository
+) :
     BaseViewModel<HomeState, HomeState.Content, HomeIntent, HomeEvent>(
         initialStateAndDefaultContentState = {
             HomeState.Loading to HomeState.Content()
         }
     ) {
+
+    init {
+        collectSubscriptionPodcasts()
+
+        viewModelScope.launch {
+            podcastEpisodeRepository.getEpisodesByPodcastIds(
+                listOf(1065162)
+            ).onSuccess {
+                updateState(
+                    lastContentState.copy(
+                        episodes = it.map { episode -> episode.toUi(false) }
+                    )
+                )
+            }
+        }
+    }
+
     override fun onIntent(intent: HomeIntent) {
         when (intent) {
             is HomeIntent.OnChangeSearchPodcastFeed -> changeSearchQuery(intent.query)
@@ -21,6 +48,18 @@ class HomeViewModel(private val homeRepository: HomeRepository) :
             HomeIntent.OnClearSearchQueryClick -> clearSearchQuery()
             HomeIntent.OnBackFromSearchClick -> closeSearch()
         }
+    }
+
+    private fun collectSubscriptionPodcasts() {
+        podcastFeedRepository.getSubscriptionPodcasts().onEach {
+            updateState(
+                lastContentState.copy(
+                    podcastsSubscriptions = lastContentState.podcastsSubscriptions.copy(
+                        podcasts = it.map { podcastFeed -> podcastFeed.toPodcastSubscriptionUi() }
+                    )
+                )
+            )
+        }.launchIn(viewModelScope)
     }
 
     private fun changeSearchQuery(newQuery: String) {

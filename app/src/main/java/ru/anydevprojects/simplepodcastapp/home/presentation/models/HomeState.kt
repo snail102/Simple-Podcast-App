@@ -8,7 +8,10 @@ sealed interface HomeState : ViewState {
 
     data object Loading : HomeState
 
-    data class Content(val episodes: List<PodcastEpisodeUi> = emptyList()) :
+    data class Content(
+        val podcastsSubscriptions: PodcastsSubscriptions = PodcastsSubscriptions(),
+        val episodes: List<PodcastEpisodeUi> = emptyList()
+    ) :
         HomeState,
         ContentViewState
 

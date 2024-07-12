@@ -16,10 +16,10 @@ interface SubscriptionPodcastFeedDao {
     suspend fun getAllSubscription(): List<SubscriptionPodcastFeedEntity>
 
     @Query("DELETE FROM subscription_podcast_feed WHERE podcast_id = :podcastId")
-    suspend fun deleteByPodcastId(podcastId: Int)
+    suspend fun deleteByPodcastId(podcastId: Long)
 
     @Query("SELECT * FROM subscription_podcast_feed WHERE podcast_id=:podcastId ")
-    suspend fun getByPodcastId(podcastId: Int): SubscriptionPodcastFeedEntity?
+    suspend fun getByPodcastId(podcastId: Long): SubscriptionPodcastFeedEntity?
 
     @Delete
     suspend fun delete(subscriptionPodcastFeed: SubscriptionPodcastFeedEntity)

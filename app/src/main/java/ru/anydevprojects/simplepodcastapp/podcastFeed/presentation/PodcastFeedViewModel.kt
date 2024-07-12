@@ -1,6 +1,9 @@
 package ru.anydevprojects.simplepodcastapp.podcastFeed.presentation
 
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import ru.anydevprojects.simplepodcastapp.core.ui.BaseViewModel
 import ru.anydevprojects.simplepodcastapp.podcastFeed.domain.PodcastFeedRepository
@@ -10,7 +13,7 @@ import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.models.Podcas
 import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.models.PodcastFeedState
 
 class PodcastFeedViewModel(
-    private val id: Int,
+    private val id: Long,
     private val podcastFeedRepository: PodcastFeedRepository
 ) : BaseViewModel<PodcastFeedState, PodcastFeedState.PodcastFeedContent, PodcastFeedIntent, PodcastFeedEvent>(
     {
@@ -19,6 +22,7 @@ class PodcastFeedViewModel(
 ) {
 
     init {
+        collectPodcast()
         loadPodcastFeed()
     }
 
@@ -31,37 +35,28 @@ class PodcastFeedViewModel(
     private fun changeSubscriptionStatus() {
         viewModelScope.launch {
             if (lastContentState.podcastInfo.subscribed) {
-                podcastFeedRepository.unsubscribeOnPodcast(podcastId = id).onSuccess {
-                    updateState(
-                        lastContentState.copy(
-                            podcastInfo = lastContentState.podcastInfo.copy(subscribed = false)
-                        )
-                    )
-                }
+                podcastFeedRepository.unsubscribeOnPodcast(podcastId = id)
             } else {
-                podcastFeedRepository.subscribeOnPodcast(podcastId = id).onSuccess {
-                    updateState(
-                        lastContentState.copy(
-                            podcastInfo = lastContentState.podcastInfo.copy(subscribed = true)
-                        )
-                    )
-                }
+                podcastFeedRepository.subscribeOnPodcast(podcastId = id)
             }
         }
     }
 
+    private fun collectPodcast() {
+        podcastFeedRepository.podcastFeedByIdFlow(id = id).filterNotNull().onEach { podcastFeed ->
+            updateState(
+                PodcastFeedState.PodcastFeedContent(
+                    podcastInfo = podcastFeed.toPodcastInfo()
+                )
+            )
+        }.launchIn(viewModelScope)
+    }
+
     private fun loadPodcastFeed() {
         viewModelScope.launch {
-            podcastFeedRepository.getPodcastFeedById(id = id)
-                .onSuccess { podcastFeed ->
-                    updateState(
-                        PodcastFeedState.PodcastFeedContent(
-                            podcastInfo = podcastFeed.toPodcastInfo()
-                        )
-                    )
-                }.onFailure {
-                    updateState(PodcastFeedState.Failed(it))
-                }
+            podcastFeedRepository.getPodcastFeedById(id = id).onFailure {
+                updateState(PodcastFeedState.Failed(it))
+            }
         }
     }
 }

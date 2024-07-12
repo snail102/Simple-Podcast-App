@@ -10,7 +10,7 @@ import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.models.Pod
 
 class PodcastEpisodeViewModel(
     private val podcastName: String,
-    private val episodeId: Int,
+    private val episodeId: Long,
     private val podcastEpisodeRepository: PodcastEpisodeRepository
 ) : BaseViewModel<
     PodcastEpisodeState,

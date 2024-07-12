@@ -9,5 +9,6 @@ fun PodcastFeed.toPodcastInfo() = PodcastInfo(
     author = this.author,
     imageUrl = this.image,
     episodeCount = this.episodeCount,
-    link = this.link
+    link = this.link,
+    subscribed = this.subscribed
 )

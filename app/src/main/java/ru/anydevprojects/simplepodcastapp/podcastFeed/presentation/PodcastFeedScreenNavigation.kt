@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PodcastFeedScreenNavigation(
-    val podcastId: Int
+    val podcastId: Long
 )

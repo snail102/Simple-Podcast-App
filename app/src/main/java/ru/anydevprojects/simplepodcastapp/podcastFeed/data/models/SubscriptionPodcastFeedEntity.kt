@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "subscription_podcast_feed")
 data class SubscriptionPodcastFeedEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Long = 0,
     @ColumnInfo(name = "podcast_id")
-    val podcastId: Int
+    val podcastId: Long
 )

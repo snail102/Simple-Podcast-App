@@ -29,7 +29,7 @@ import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.models.Pod
 @Composable
 fun PodcastEpisodeScreen(
     podcastName: String,
-    episodeId: Int,
+    episodeId: Long,
     onBackClick: () -> Unit,
     viewModel: PodcastEpisodeViewModel = koinViewModel(
         parameters = {

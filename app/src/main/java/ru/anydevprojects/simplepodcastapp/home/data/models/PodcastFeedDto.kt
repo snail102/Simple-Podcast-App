@@ -6,19 +6,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PodcastFeedDto(
     @SerialName("id")
-    val id: Int,
-
-    @SerialName("podcastGuid")
-    val podcastGuid: String,
+    val id: Long,
 
     @SerialName("title")
     val title: String,
 
     @SerialName("url")
     val url: String,
-
-    @SerialName("originalUrl")
-    val originalUrl: String,
 
     @SerialName("link")
     val link: String,

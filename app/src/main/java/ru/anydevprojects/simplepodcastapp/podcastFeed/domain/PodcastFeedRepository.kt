@@ -1,12 +1,17 @@
 package ru.anydevprojects.simplepodcastapp.podcastFeed.domain
 
+import kotlinx.coroutines.flow.Flow
 import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeed
 
 interface PodcastFeedRepository {
 
-    suspend fun getPodcastFeedById(id: Int): Result<PodcastFeed>
+    fun podcastFeedByIdFlow(id: Long): Flow<PodcastFeed?>
 
-    suspend fun subscribeOnPodcast(podcastId: Int): Result<Unit>
+    fun getSubscriptionPodcasts(): Flow<List<PodcastFeed>>
 
-    suspend fun unsubscribeOnPodcast(podcastId: Int): Result<Unit>
+    suspend fun getPodcastFeedById(id: Long): Result<PodcastFeed>
+
+    suspend fun subscribeOnPodcast(podcastId: Long)
+
+    suspend fun unsubscribeOnPodcast(podcastId: Long)
 }

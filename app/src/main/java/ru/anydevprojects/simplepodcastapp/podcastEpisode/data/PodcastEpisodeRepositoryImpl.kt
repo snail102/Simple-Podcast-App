@@ -13,7 +13,7 @@ import ru.anydevprojects.simplepodcastapp.podcastEpisode.domain.models.PodcastEp
 class PodcastEpisodeRepositoryImpl(
     private val httpClient: HttpClient
 ) : PodcastEpisodeRepository {
-    override suspend fun getEpisodesByPodcastId(podcastId: Int): Result<List<PodcastEpisode>> {
+    override suspend fun getEpisodesByPodcastId(podcastId: Long): Result<List<PodcastEpisode>> {
         return getEpisodes(requestId = podcastId.toString())
     }
 
@@ -23,7 +23,7 @@ class PodcastEpisodeRepositoryImpl(
         return getEpisodes(requestId = podcastIds.joinToString(separator = ","))
     }
 
-    override suspend fun getEpisodeById(id: Int): Result<PodcastEpisode> {
+    override suspend fun getEpisodeById(id: Long): Result<PodcastEpisode> {
         return kotlin.runCatching {
             val podcastEpisodeByIdResponse = httpClient.get("episodes/byid") {
                 parameter("id", id)

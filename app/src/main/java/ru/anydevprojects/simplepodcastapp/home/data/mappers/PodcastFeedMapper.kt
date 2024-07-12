@@ -6,10 +6,8 @@ import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeedSearched
 
 fun PodcastFeedDto.toDomain(subscribed: Boolean): PodcastFeed = PodcastFeed(
     id = this.id,
-    podcastGuid = this.podcastGuid,
     title = this.title,
     url = this.url,
-    originalUrl = this.originalUrl,
     link = this.link,
     description = this.description,
     image = this.image,

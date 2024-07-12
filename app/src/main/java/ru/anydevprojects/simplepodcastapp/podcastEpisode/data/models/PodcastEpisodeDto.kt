@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PodcastEpisodeDto(
     @SerialName("id")
-    val id: Int,
+    val id: Long,
 
     @SerialName("title")
     val title: String,
@@ -15,7 +15,7 @@ data class PodcastEpisodeDto(
     val description: String,
 
     @SerialName("datePublished")
-    val dateTimestamp: Int,
+    val dateTimestamp: Long,
 
     @SerialName("enclosureUrl")
     val enclosureUrl: String,
@@ -33,6 +33,6 @@ data class PodcastEpisodeDto(
     val feedImage: String,
 
     @SerialName("feedId")
-    val feedId: Int
+    val feedId: Long
 
 )

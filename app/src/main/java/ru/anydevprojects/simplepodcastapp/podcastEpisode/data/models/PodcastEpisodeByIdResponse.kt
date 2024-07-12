@@ -5,6 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PodcastEpisodeByIdResponse(
     val status: String,
-    val id: Int,
+    val id: Long,
     val episode: PodcastEpisodeDto
 )
