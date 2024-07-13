@@ -4,21 +4,33 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.data.mappers.toDomain
+import ru.anydevprojects.simplepodcastapp.podcastEpisode.data.mappers.toEntity
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.data.models.PodcastEpisodeByIdResponse
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.data.models.PodcastEpisodesResponse
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.domain.PodcastEpisodeRepository
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.domain.models.PodcastEpisode
 
 class PodcastEpisodeRepositoryImpl(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val podcastEpisodeDao: PodcastEpisodeDao
 ) : PodcastEpisodeRepository {
+
+    override fun getPodcastEpisodeFlow(episodeId: Long): Flow<PodcastEpisode?> =
+        podcastEpisodeDao.getEpisodeFlow(episodeId).map { it?.toDomain() }
+
+    override fun getAllEpisodesSubscriptions(): Flow<List<PodcastEpisode>> =
+        podcastEpisodeDao.getAllEpisodesSubscriptions()
+            .map { it.map { podcastEpisode -> podcastEpisode.toDomain() } }
+
     override suspend fun getEpisodesByPodcastId(podcastId: Long): Result<List<PodcastEpisode>> {
         return getEpisodes(requestId = podcastId.toString())
     }
 
     override suspend fun getEpisodesByPodcastIds(
-        podcastIds: List<Int>
+        podcastIds: List<Long>
     ): Result<List<PodcastEpisode>> {
         return getEpisodes(requestId = podcastIds.joinToString(separator = ","))
     }
@@ -29,7 +41,11 @@ class PodcastEpisodeRepositoryImpl(
                 parameter("id", id)
             }.body<PodcastEpisodeByIdResponse>()
 
-            podcastEpisodeByIdResponse.episode.toDomain()
+            val episode = podcastEpisodeByIdResponse.episode.toDomain()
+
+            podcastEpisodeDao.insert(episode.toEntity())
+
+            episode
         }
     }
 
@@ -39,9 +55,13 @@ class PodcastEpisodeRepositoryImpl(
                 parameter("id", requestId)
             }.body<PodcastEpisodesResponse>()
 
-            podcastEpisodesResponse.items.map {
+            val episodes = podcastEpisodesResponse.items.map {
                 it.toDomain()
             }
+
+            podcastEpisodeDao.insert(episodes.map { it.toEntity() })
+
+            episodes
         }
     }
 }

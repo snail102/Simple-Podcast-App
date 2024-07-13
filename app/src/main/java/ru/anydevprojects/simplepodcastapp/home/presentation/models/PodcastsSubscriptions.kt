@@ -5,4 +5,4 @@ import androidx.compose.runtime.Immutable
 @Immutable
 data class PodcastsSubscriptions(
     val podcasts: List<PodcastSubscriptionUi> = emptyList()
-)
+) : HomeScreenItem

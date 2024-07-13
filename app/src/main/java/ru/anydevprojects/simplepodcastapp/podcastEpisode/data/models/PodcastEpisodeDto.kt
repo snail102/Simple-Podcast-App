@@ -34,5 +34,4 @@ data class PodcastEpisodeDto(
 
     @SerialName("feedId")
     val feedId: Long
-
 )

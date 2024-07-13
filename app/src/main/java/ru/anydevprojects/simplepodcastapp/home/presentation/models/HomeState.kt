@@ -9,16 +9,15 @@ sealed interface HomeState : ViewState {
     data object Loading : HomeState
 
     data class Content(
-        val podcastsSubscriptions: PodcastsSubscriptions = PodcastsSubscriptions(),
-        val episodes: List<PodcastEpisodeUi> = emptyList()
-    ) :
-        HomeState,
+        val homeScreenItems: List<HomeScreenItem> = emptyList(),
+        val searchContent: SearchContent = SearchContent()
+    ) : HomeState,
         ContentViewState
-
-    data class SearchContent(
-        val isLoading: Boolean = false,
-        val searchQuery: String = "",
-        val podcastFeeds: List<PodcastFeedSearched> = emptyList(),
-        val enabledClear: Boolean = false
-    ) : HomeState
 }
+
+data class SearchContent(
+    val isLoading: Boolean = false,
+    val searchQuery: String = "",
+    val podcastFeeds: List<PodcastFeedSearched> = emptyList(),
+    val enabledClear: Boolean = false
+)

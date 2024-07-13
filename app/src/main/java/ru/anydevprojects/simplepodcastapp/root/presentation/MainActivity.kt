@@ -33,10 +33,9 @@ class MainActivity : ComponentActivity() {
                             onPodcastClick = { id ->
                                 navController.navigate(PodcastFeedScreenNavigation(podcastId = id))
                             },
-                            onEpisodeClick = { podcastName, episodeId ->
+                            onEpisodeClick = { episodeId ->
                                 navController.navigate(
                                     PodcastEpisodeScreenNavigation(
-                                        podcastName = podcastName,
                                         episodeId = episodeId
                                     )
                                 )
@@ -54,7 +53,6 @@ class MainActivity : ComponentActivity() {
                     composable<PodcastEpisodeScreenNavigation> {
                         val args = it.toRoute<PodcastEpisodeScreenNavigation>()
                         PodcastEpisodeScreen(
-                            podcastName = args.podcastName,
                             episodeId = args.episodeId,
                             onBackClick = {
                                 navController.popBackStack()

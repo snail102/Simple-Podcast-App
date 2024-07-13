@@ -28,12 +28,10 @@ import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.models.Pod
 
 @Composable
 fun PodcastEpisodeScreen(
-    podcastName: String,
     episodeId: Long,
     onBackClick: () -> Unit,
     viewModel: PodcastEpisodeViewModel = koinViewModel(
         parameters = {
-            parametersOf(podcastName)
             parametersOf(episodeId)
         }
     )
@@ -43,7 +41,7 @@ fun PodcastEpisodeScreen(
     Scaffold(
         topBar = {
             EpisodeTopBar(
-                title = podcastName,
+                title = "title",
                 onBackClick = onBackClick
             )
         }
