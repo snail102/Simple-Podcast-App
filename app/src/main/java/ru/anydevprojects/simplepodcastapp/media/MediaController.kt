@@ -10,7 +10,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.session.MediaController
@@ -26,7 +25,7 @@ import com.google.common.util.concurrent.MoreExecutors
  */
 @Composable
 fun rememberManagedMediaController(
-    lifecycle: Lifecycle = LocalLifecycleOwner.current.lifecycle
+    lifecycle: Lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
 ): State<MediaController?> {
     // Application context is used to prevent memory leaks
     val appContext = LocalContext.current.applicationContext
@@ -100,9 +99,11 @@ internal class MediaControllerManager private constructor(context: Context) : Re
     override fun onAbandoned() {
         release()
     }
+
     override fun onForgotten() {
         release()
     }
+
     override fun onRemembered() {}
 
     companion object {

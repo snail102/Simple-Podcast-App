@@ -8,4 +8,5 @@ sealed interface HomeIntent : ViewIntent {
     data object OnClearSearchQueryClick : HomeIntent
     data object OnBackFromSearchClick : HomeIntent
     data class OnPlayEpisodeBtnClick(val episodeUi: PodcastEpisodeUi) : HomeIntent
+    data object OnChangePayingCurrentMediaBtnClick : HomeIntent
 }
