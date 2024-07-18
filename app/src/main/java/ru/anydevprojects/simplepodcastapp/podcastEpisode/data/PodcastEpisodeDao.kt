@@ -19,6 +19,9 @@ interface PodcastEpisodeDao {
     @Query("SELECT * FROM podcast_episode WHERE id = :id")
     fun getEpisodeFlow(id: Long): Flow<PodcastEpisodeEntity?>
 
+    @Query("SELECT * FROM podcast_episode WHERE feed_id = :id")
+    fun getEpisodesFlow(id: Long): Flow<List<PodcastEpisodeEntity>>
+
     @Query(
         """
         SELECT e.*

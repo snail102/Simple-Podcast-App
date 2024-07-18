@@ -46,7 +46,12 @@ class MainActivity : ComponentActivity() {
                     composable<PodcastFeedScreenNavigation> {
                         val args = it.toRoute<PodcastFeedScreenNavigation>()
                         PodcastFeedScreen(
-                            podcastId = args.podcastId
+                            podcastId = args.podcastId,
+                            onNavigateToEpisodeDetail = {
+                                navController.navigate(
+                                    PodcastEpisodeScreenNavigation(episodeId = it)
+                                )
+                            }
                         )
                     }
 

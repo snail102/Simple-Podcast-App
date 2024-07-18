@@ -7,6 +7,8 @@ interface PodcastEpisodeRepository {
 
     fun getPodcastEpisodeFlow(episodeId: Long): Flow<PodcastEpisode?>
 
+    fun getPodcastEpisodesFlow(podcastId: Long): Flow<List<PodcastEpisode>>
+
     fun getAllEpisodesSubscriptions(): Flow<List<PodcastEpisode>>
 
     suspend fun getEpisodesByPodcastId(podcastId: Long): Result<List<PodcastEpisode>>

@@ -1,13 +1,14 @@
 package ru.anydevprojects.simplepodcastapp.podcastFeed.presentation
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,25 +18,37 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -46,10 +59,13 @@ import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.models.Podcas
 import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.models.PodcastFeedState
 import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.models.PodcastInfo
 import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
+import kotlin.math.hypot
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PodcastFeedScreen(
     podcastId: Long,
+    onNavigateToEpisodeDetail: (Long) -> Unit,
     viewModel: PodcastFeedViewModel = koinViewModel(
         parameters = {
             parametersOf(podcastId)
@@ -83,6 +99,9 @@ fun PodcastFeedScreen(
                 ),
                 onChangeSubscribeBtnClick = {
                     viewModel.onIntent(PodcastFeedIntent.ChangeSubscriptionStatus)
+                },
+                onEpisodeClick = {
+                    onNavigateToEpisodeDetail(it.id)
                 }
             )
         }
@@ -93,125 +112,155 @@ fun PodcastFeedScreen(
 private fun ContentHomeScreen(
     podcastInfo: PodcastInfo,
     onChangeSubscribeBtnClick: () -> Unit,
+    onEpisodeClick: (PodcastEpisodeUi) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.verticalScroll(rememberScrollState())
+    val scroll = rememberScrollState()
+
+    val startScrolled by remember {
+        derivedStateOf {
+            scroll.value != 0
+        }
+    }
+
+    Box(
+        modifier = modifier
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 220.dp + contentPadding.calculateTopPadding())
-                .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                .background(color = Color.Red)
-                .padding(
-                    top = contentPadding.calculateTopPadding() + 16.dp,
-                    start = 32.dp,
-                    end = 32.dp,
-                    bottom = 32.dp
-                )
+            modifier = modifier.verticalScroll(scroll)
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // .defaultMinSize(minHeight = 220.dp + contentPadding.calculateTopPadding())
+                    .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+                    .background(color = Color.Red)
+                    .padding(
+                        top = contentPadding.calculateTopPadding()
+                    )
+            ) {
+                IconButton(
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    onClick = {}
+                ) {
+                    Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
+                }
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 32.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    AsyncImage(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .size(100.dp),
+                        model = podcastInfo.imageUrl,
+                        contentDescription = null
+                    )
+
+                    Button(
+                        modifier = Modifier,
+                        onClick = {
+                            onChangeSubscribeBtnClick()
+                        }
+                    ) {
+                        val text = if (podcastInfo.subscribed) {
+                            "Отписаться"
+                        } else {
+                            "Подписаться"
+                        }
+                        Text(text)
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    modifier = Modifier.padding(horizontal = 32.dp),
+                    text = podcastInfo.title,
+                    minLines = 2,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.W500
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                modifier = Modifier.padding(horizontal = 32.dp),
+                text = "Описание",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.W500
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(color = Color.White)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                text = podcastInfo.description,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 15.sp
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp)),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                AsyncImage(
-                    modifier = Modifier
-                        .size(100.dp),
-                    model = podcastInfo.imageUrl,
-                    contentDescription = null
+                Text(
+                    text = "Эпизоды",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.W500
                 )
 
-                Button(
-                    modifier = Modifier,
-                    onClick = {
-                        onChangeSubscribeBtnClick()
-                    }
-                ) {
-                    val text = if (podcastInfo.subscribed) {
-                        "Отписаться"
-                    } else {
-                        "Подписаться"
-                    }
-                    Text(text)
-                }
+                Text(
+                    text = podcastInfo.episodeCount.toString(),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.W500
+                )
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                modifier = Modifier,
-                text = podcastInfo.title,
-                minLines = 2,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.W500
-            )
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-        Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
-            text = "Описание",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.W500
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(color = Color.White)
-                .padding(horizontal = 16.dp),
-            text = podcastInfo.description,
-            overflow = TextOverflow.Ellipsis,
-            fontSize = 15.sp
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Эпизоды",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.W500
-            )
-
-            Text(
-                text = podcastInfo.episodeCount.toString(),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.W500
-            )
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-//        LazyColumn(
-//            modifier = Modifier.fillMaxSize()
-//        ) {
-//            itemsIndexed(
-//                items = podcastInfo.episodes,
-//                key = { _, item: PodcastEpisodeUi ->
-//                    item.id
-//                }
-//            ) {index: Int, item: PodcastEpisodeUi ->
-//                EpisodeItem(
-//                    episodeUi = item
-//                )
-//                if (index!=podcastInfo.episodes.lastIndex) {
-//                    HorizontalDivider(
-//                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+//            LazyColumn(
+//                modifier = Modifier
+//            ) {
+//                itemsIndexed(
+//                    items = podcastInfo.episodes,
+//                    key = { _, item: PodcastEpisodeUi ->
+//                        item.id
+//                    }
+//                ) { index: Int, item: PodcastEpisodeUi ->
+//                    EpisodeItem(
+//                        episodeUi = item,
+//                        onClick = {
+//                            onEpisodeClick(item)
+//                        }
 //                    )
+//                    if (index != podcastInfo.episodes.lastIndex) {
+//                        HorizontalDivider(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(horizontal = 16.dp)
+//                        )
+//                    }
 //                }
 //            }
-//        }
+        }
+
+        if (startScrolled) {
+            TopBar(
+                modifier = Modifier.fillMaxWidth(),
+                topPadding = contentPadding.calculateTopPadding(),
+                onBackClick = {}
+            )
+        }
     }
 }
 
@@ -230,7 +279,8 @@ private fun ContentPreview() {
                 subscribed = false
             ),
             contentPadding = PaddingValues(),
-            onChangeSubscribeBtnClick = {}
+            onChangeSubscribeBtnClick = {},
+            onEpisodeClick = {}
         )
     }
 }
@@ -256,23 +306,32 @@ private fun FailedContent(failedState: PodcastFeedState.Failed, modifier: Modifi
 }
 
 @Composable
-private fun EpisodeItem(episodeUi: PodcastEpisodeUi, modifier: Modifier = Modifier) {
+private fun EpisodeItem(
+    episodeUi: PodcastEpisodeUi,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = modifier
+            .clickable {
+                onClick()
+            }
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
             text = episodeUi.title,
             overflow = TextOverflow.Ellipsis,
-            maxLines = 2,
+            maxLines = 3,
+            minLines = 3,
             fontSize = 15.sp,
             fontWeight = FontWeight.W500
         )
-        Text(
-            text = episodeUi.description,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 3,
-            fontSize = 13.sp
-        )
+//        Text(
+//            text = episodeUi.description,
+//            overflow = TextOverflow.Ellipsis,
+//            maxLines = 3,
+//            fontSize = 13.sp
+//        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
@@ -312,6 +371,38 @@ private fun EpisodeItem(episodeUi: PodcastEpisodeUi, modifier: Modifier = Modifi
     }
 }
 
+@Composable
+private fun TopBar(onBackClick: () -> Unit, topPadding: Dp, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+            .background(color = Color.Gray)
+            .padding(top = topPadding)
+            .height(48.dp)
+    ) {
+        IconButton(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            onClick = {
+                onBackClick()
+            }
+        ) {
+            Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun TopBarPreview() {
+    SimplePodcastAppTheme {
+        TopBar(
+            topPadding = 22.dp,
+            onBackClick = {}
+        )
+    }
+}
+
 @Preview
 @Composable
 private fun EpisodeItemPreview() {
@@ -324,7 +415,8 @@ private fun EpisodeItemPreview() {
                 isPlaying = false,
                 imageUrl = "",
                 audioUrl = ""
-            )
+            ),
+            onClick = {}
         )
     }
 }

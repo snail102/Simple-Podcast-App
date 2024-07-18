@@ -12,7 +12,7 @@ import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.PodcastFeedVi
 val podcastFeedModule = module {
 
     factory<PodcastFeedRepository> { PodcastFeedRepositoryImpl(get(), get(), get()) }
-    viewModel { PodcastFeedViewModel(get(), get()) }
+    viewModel { PodcastFeedViewModel(get(), get(), get()) }
     single<SubscriptionPodcastFeedDao> { get<PodcastDatabase>().getSubscriptionPodcastFeedDao() }
     single<PodcastFeedDao> { get<PodcastDatabase>().getPodcastFeedDao() }
 }

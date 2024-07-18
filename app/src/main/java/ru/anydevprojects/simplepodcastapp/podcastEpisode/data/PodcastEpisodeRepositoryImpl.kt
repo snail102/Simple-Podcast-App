@@ -21,6 +21,9 @@ class PodcastEpisodeRepositoryImpl(
     override fun getPodcastEpisodeFlow(episodeId: Long): Flow<PodcastEpisode?> =
         podcastEpisodeDao.getEpisodeFlow(episodeId).map { it?.toDomain() }
 
+    override fun getPodcastEpisodesFlow(podcastId: Long): Flow<List<PodcastEpisode>> =
+        podcastEpisodeDao.getEpisodesFlow(podcastId).map { list -> list.map { it.toDomain() } }
+
     override fun getAllEpisodesSubscriptions(): Flow<List<PodcastEpisode>> =
         podcastEpisodeDao.getAllEpisodesSubscriptions()
             .map { it.map { podcastEpisode -> podcastEpisode.toDomain() } }
