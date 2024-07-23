@@ -25,7 +25,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,7 +47,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,7 +56,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
-import ru.anydevprojects.simplepodcastapp.R
 import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeedSearched
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeEvent
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeIntent
@@ -69,6 +66,7 @@ import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastsSubsc
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.SearchContent
 import ru.anydevprojects.simplepodcastapp.media.rememberManagedMediaController
 import ru.anydevprojects.simplepodcastapp.ui.components.BottomMediaPlayer
+import ru.anydevprojects.simplepodcastapp.ui.components.EpisodeControlPanel
 import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
 
 @Composable
@@ -358,21 +356,16 @@ private fun PodcastEpisodeItem(
                 maxLines = 3,
                 minLines = 3
             )
-            Row(
+            EpisodeControlPanel(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(modifier = Modifier.size(32.dp), onClick = { onPlayBtnClick() }) {
-                    Icon(
-                        if (podcastEpisodeUi.isPlaying) {
-                            painterResource(R.drawable.ic_pause)
-                        } else {
-                            painterResource(R.drawable.ic_play)
-                        },
-                        contentDescription = null
-                    )
-                }
-            }
+                isDownloaded = false,
+                isAddedPlaylist = false,
+                isPlaying = podcastEpisodeUi.isPlaying,
+                onDownloadControlClick = {},
+                onAddPlaylistControlClick = {},
+                onPlayControlClick = {},
+                tint = Color.Black
+            )
         }
     }
 }
