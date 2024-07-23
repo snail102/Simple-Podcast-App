@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
+import ru.anydevprojects.simplepodcastapp.R
 import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeedSearched
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeEvent
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeIntent
@@ -362,7 +364,11 @@ private fun PodcastEpisodeItem(
             ) {
                 IconButton(modifier = Modifier.size(32.dp), onClick = { onPlayBtnClick() }) {
                     Icon(
-                        Icons.Default.PlayArrow,
+                        if (podcastEpisodeUi.isPlaying) {
+                            painterResource(R.drawable.ic_pause)
+                        } else {
+                            painterResource(R.drawable.ic_play)
+                        },
                         contentDescription = null
                     )
                 }

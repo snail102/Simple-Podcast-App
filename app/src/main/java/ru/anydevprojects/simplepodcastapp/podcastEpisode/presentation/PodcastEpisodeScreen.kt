@@ -45,6 +45,7 @@ import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.models.PodcastEpisodeState
+import ru.anydevprojects.simplepodcastapp.ui.components.EpisodeControlPanel
 import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
 
 @Composable
@@ -146,44 +147,18 @@ private fun EpisodeContent(state: PodcastEpisodeState.Content, modifier: Modifie
             )
         }
 
-        Row(
+        EpisodeControlPanel(
             modifier = Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
                 .background(color = Color.Gray)
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-        ) {
-            IconButton(
-                modifier = Modifier.size(32.dp),
-                onClick = {
-                }
-            ) {
-                Icon(
-                    Icons.Default.LocationOn,
-                    contentDescription = null
-                )
-            }
-            IconButton(
-                modifier = Modifier.size(32.dp),
-                onClick = {
-                }
-            ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = null
-                )
-            }
-            IconButton(
-                modifier = Modifier.size(32.dp),
-                onClick = {
-                }
-            ) {
-                Icon(
-                    Icons.Default.PlayArrow,
-                    contentDescription = null
-                )
-            }
-        }
+            isDownloaded = false,
+            isAddedPlaylist = false,
+            isPlaying = false,
+            onDownloadControlClick = {},
+            onAddPlaylistControlClick = {},
+            onPlayControlClick = {}
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
