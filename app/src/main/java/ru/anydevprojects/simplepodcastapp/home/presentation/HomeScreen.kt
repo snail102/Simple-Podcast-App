@@ -1,6 +1,8 @@
 package ru.anydevprojects.simplepodcastapp.home.presentation
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -45,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
@@ -53,8 +56,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.session.MediaController
 import coil.compose.AsyncImage
+import com.google.common.util.concurrent.ListenableFuture
 import org.koin.androidx.compose.koinViewModel
 import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeedSearched
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeEvent
@@ -64,22 +68,19 @@ import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastEpisod
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastSubscriptionUi
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastsSubscriptions
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.SearchContent
-import ru.anydevprojects.simplepodcastapp.media.rememberManagedMediaController
 import ru.anydevprojects.simplepodcastapp.ui.components.BottomMediaPlayer
 import ru.anydevprojects.simplepodcastapp.ui.components.EpisodeControlPanel
 import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun HomeScreen(
+    animatedVisibilityScope: AnimatedVisibilityScope,
     onPodcastClick: (Long) -> Unit,
     onEpisodeClick: (Long) -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val state by viewModel.stateFlow.collectAsState()
-
-    val isPlayerSetUp by viewModel.isPlayerSetUp.collectAsStateWithLifecycle()
-
-    val mediaController by rememberManagedMediaController()
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -90,34 +91,6 @@ fun HomeScreen(
                 HomeEvent.ClearFocused -> focusManager.clearFocus(true)
                 HomeEvent.HideKeyboard -> keyboardController?.hide()
                 is HomeEvent.PlayEpisode -> {
-//                    mediaController?.clearMediaItems()
-//                    val metadata = MediaMetadata.Builder()
-//                        .setDisplayTitle(event.title)
-//                        .setArtworkUri(event.imageUri)
-//                        // .setGenre(genres)
-//                        .build()
-//
-//                    mediaController?.updatePlaylist(
-//                        listOf(
-//                            MediaItem.Builder()
-//                                .setUri(event.uri)
-//                                .setMediaId(event.id)
-//                                .setMediaMetadata(metadata)
-//                                .build()
-//                        )
-//                    )
-//                    mediaController?.playMediaAt(0)
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(key1 = isPlayerSetUp) {
-        if (isPlayerSetUp) {
-            mediaController?.run {
-                if (mediaItemCount > 0) {
-                    prepare()
-                    play()
                 }
             }
         }
@@ -137,6 +110,7 @@ fun HomeScreen(
         when (val localState = state) {
             is HomeState.Content -> {
                 ContentHomeScreen(
+                    animatedVisibilityScope = animatedVisibilityScope,
                     modifier = Modifier
                         .fillMaxSize(),
                     contentPadding = PaddingValues(
@@ -162,6 +136,7 @@ fun HomeScreen(
 
 @Composable
 private fun ContentHomeScreen(
+    animatedVisibilityScope: AnimatedVisibilityScope,
     homeState: HomeState.Content,
     onPodcastClick: (Long) -> Unit,
     onEpisodeClick: (Long) -> Unit,
@@ -242,6 +217,7 @@ private fun ContentHomeScreen(
                     )
 
                     is PodcastEpisodeUi -> PodcastEpisodeItem(
+                        // animatedVisibilityScope = animatedVisibilityScope,
                         modifier = Modifier.fillMaxWidth(),
                         podcastEpisodeUi = homeScreenItem,
                         onClick = {
@@ -319,8 +295,10 @@ private fun PodcastSubscriptionItem(
     )
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun PodcastEpisodeItem(
+    // animatedVisibilityScope: AnimatedVisibilityScope,
     podcastEpisodeUi: PodcastEpisodeUi,
     onClick: () -> Unit,
     onPlayBtnClick: () -> Unit,
@@ -338,6 +316,12 @@ private fun PodcastEpisodeItem(
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(16.dp)),
+//                .sharedElement(
+//                    state = rememberSharedContentState(
+//                        key = podcastEpisodeUi.imageUrl
+//                    ),
+//                    animatedVisibilityScope = animatedVisibilityScope
+//                ),
             model = podcastEpisodeUi.imageUrl,
             contentDescription = null
         )
@@ -363,7 +347,9 @@ private fun PodcastEpisodeItem(
                 isPlaying = podcastEpisodeUi.isPlaying,
                 onDownloadControlClick = {},
                 onAddPlaylistControlClick = {},
-                onPlayControlClick = {},
+                onPlayControlClick = {
+                    onPlayBtnClick()
+                },
                 tint = Color.Black
             )
         }

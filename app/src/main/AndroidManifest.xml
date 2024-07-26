@@ -22,7 +22,7 @@
         <activity
             android:name=".root.presentation.MainActivity"
             android:exported="true"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:label="@string/app_name"
             android:theme="@style/Theme.SimplePodcastApp">
             <intent-filter>

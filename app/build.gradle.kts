@@ -76,6 +76,8 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.legacy.v4)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -111,4 +113,5 @@ dependencies {
     implementation(libs.media3.session)
     implementation(libs.media3.exoplayer.workmanager)
     implementation(libs.workmanager.core)
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 }

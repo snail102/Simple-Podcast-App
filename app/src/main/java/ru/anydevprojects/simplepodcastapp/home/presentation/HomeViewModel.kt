@@ -1,32 +1,18 @@
 package ru.anydevprojects.simplepodcastapp.home.presentation
 
 import android.annotation.SuppressLint
-import android.content.ComponentName
 import android.content.Context
-import android.util.Log
+import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.AudioAttributes
-import androidx.media3.common.DeviceInfo
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.PlaybackParameters
-import androidx.media3.common.Player
-import androidx.media3.common.Timeline
-import androidx.media3.common.TrackSelectionParameters
-import androidx.media3.common.Tracks
-import androidx.media3.common.VideoSize
-import androidx.media3.common.text.CueGroup
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
-import androidx.work.await
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.media3.common.util.UnstableApi
+import androidx.room.util.copy
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.anydevprojects.simplepodcastapp.core.ui.BaseViewModel
 import ru.anydevprojects.simplepodcastapp.home.domain.HomeRepository
@@ -39,17 +25,18 @@ import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeState
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastEpisodeUi
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastsSubscriptions
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.SearchContent
-import ru.anydevprojects.simplepodcastapp.media.PlaybackService
+import ru.anydevprojects.simplepodcastapp.media.JetAudioServiceHandler
+import ru.anydevprojects.simplepodcastapp.media.JetAudioState
+import ru.anydevprojects.simplepodcastapp.media.PlayerEvent
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.domain.PodcastEpisodeRepository
 import ru.anydevprojects.simplepodcastapp.podcastFeed.domain.PodcastFeedRepository
-import ru.anydevprojects.simplepodcastapp.utils.playMediaAt
-import ru.anydevprojects.simplepodcastapp.utils.updatePlaylist
 
 class HomeViewModel(
     private val homeRepository: HomeRepository,
     private val podcastEpisodeRepository: PodcastEpisodeRepository,
     private val podcastFeedRepository: PodcastFeedRepository,
-    private val applicationContext: Context
+    private val applicationContext: Context,
+    private val jetAudioServiceHandler: JetAudioServiceHandler
 ) :
     BaseViewModel<HomeState, HomeState.Content, HomeIntent, HomeEvent>(
         initialStateAndDefaultContentState = {
@@ -60,110 +47,60 @@ class HomeViewModel(
     private var episodes: List<PodcastEpisodeUi> = emptyList()
     private var podcastsSubscriptions: PodcastsSubscriptions = PodcastsSubscriptions()
 
-    private val _isPlayerSetUp = MutableStateFlow(false)
-    val isPlayerSetUp = _isPlayerSetUp.asStateFlow()
+    init {
 
-    fun setupPlayer() {
-        _isPlayerSetUp.update {
-            true
-        }
-    }
+        viewModelScope.launch {
+            jetAudioServiceHandler.audioState.collectLatest { mediaState ->
+                when (mediaState) {
+                    JetAudioState.Initial -> {
+                    }
 
-    private var mediaController: MediaController? = null
+                    is JetAudioState.Buffering -> {
+                    }
 
-    private val listener = object : Player.Listener {
-        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
-            Log.d("onTimelineChanged", timeline.periodCount.toString())
-        }
+                    is JetAudioState.Playing -> {
+                        val id = mediaState.id.toLongOrNull()
+                        updateState(
+                            lastContentState.copy(
+                                mediaPlayerContent = lastContentState.mediaPlayerContent.copy(
+                                    enabled = true,
+                                    isPlaying = mediaState.isPlaying,
+                                    title = mediaState.title,
+                                    imageUrl = mediaState.imageUri?.toString().orEmpty()
+                                ),
+                                homeScreenItems = lastContentState.homeScreenItems.map {
+                                    when (it) {
+                                        is PodcastEpisodeUi -> if (
+                                            id != null &&
+                                            it.id == id &&
+                                            mediaState.isPlaying
+                                        ) {
+                                            it.copy(
+                                                isPlaying = true
+                                            )
+                                        } else {
+                                            it.copy(
+                                                isPlaying = false
+                                            )
+                                        }
 
-        override fun onTracksChanged(tracks: Tracks) {
-        }
+                                        is PodcastsSubscriptions -> it
+                                    }
+                                }
+                            )
+                        )
+                    }
 
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-        }
+                    is JetAudioState.Progress -> {
+                    }
 
-        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-        }
+                    is JetAudioState.CurrentPlaying -> {
+                    }
 
-        override fun onPlaylistMetadataChanged(mediaMetadata: MediaMetadata) {
-        }
-
-        override fun onIsLoadingChanged(isLoading: Boolean) {
-        }
-
-        override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
-        }
-
-        override fun onTrackSelectionParametersChanged(parameters: TrackSelectionParameters) {
-        }
-
-        override fun onPlaybackStateChanged(@Player.State playbackState: Int) {
-        }
-
-        override fun onPlayWhenReadyChanged(
-            playWhenReady: Boolean,
-            @Player.PlayWhenReadyChangeReason reason: Int
-        ) {
-        }
-
-        override fun onPlaybackSuppressionReasonChanged(playbackSuppressionReason: Int) {
-        }
-
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            Log.d("isPlaying", isPlaying.toString())
-            updateState(
-                lastContentState.copy(
-                    mediaPlayerContent = lastContentState.mediaPlayerContent.copy(
-                        isPlaying = isPlaying
-                    )
-                )
-            )
-        }
-
-        override fun onRepeatModeChanged(repeatMode: Int) {
-        }
-
-        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-        }
-
-        override fun onPlayerErrorChanged(error: PlaybackException?) {
-        }
-
-        override fun onPositionDiscontinuity(
-            oldPosition: Player.PositionInfo,
-            newPosition: Player.PositionInfo,
-            reason: Int
-        ) {
-        }
-
-        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
-        }
-
-        override fun onSeekBackIncrementChanged(seekBackIncrementMs: Long) {
-        }
-
-        override fun onSeekForwardIncrementChanged(seekForwardIncrementMs: Long) {
-        }
-
-        override fun onMaxSeekToPreviousPositionChanged(maxSeekToPreviousPositionMs: Long) {
-        }
-
-        override fun onAudioAttributesChanged(audioAttributes: AudioAttributes) {
-        }
-
-        override fun onVolumeChanged(volume: Float) {
-        }
-
-        override fun onDeviceInfoChanged(deviceInfo: DeviceInfo) {
-        }
-
-        override fun onDeviceVolumeChanged(volume: Int, muted: Boolean) {
-        }
-
-        override fun onVideoSizeChanged(videoSize: VideoSize) {
-        }
-
-        override fun onCues(cues: CueGroup) {
+                    is JetAudioState.Ready -> {
+                    }
+                }
+            }
         }
     }
 
@@ -180,74 +117,36 @@ class HomeViewModel(
             HomeIntent.OnBackFromSearchClick -> closeSearch()
             is HomeIntent.OnPlayEpisodeBtnClick -> playEpisode(intent.episodeUi)
             HomeIntent.OnChangePayingCurrentMediaBtnClick -> {
-                if (mediaController?.isPlaying == true) {
-                    mediaController?.pause()
-                } else {
-                    mediaController?.play()
+                viewModelScope.launch {
+                    jetAudioServiceHandler.onPlayerEvents(
+                        PlayerEvent.PlayPause
+                    )
                 }
             }
         }
     }
 
+    @OptIn(UnstableApi::class)
     @SuppressLint("RestrictedApi")
     private fun playEpisode(episodeUi: PodcastEpisodeUi) {
+        val metadata = MediaMetadata.Builder()
+            .setDisplayTitle(episodeUi.title)
+            .setArtworkUri(episodeUi.imageUrl.toUri())
+            // .setGenre(genres)
+            .build()
+
+        val item = MediaItem.Builder()
+            .setUri(episodeUi.audioUrl.toUri())
+            .setMediaId(episodeUi.id.toString())
+            .setMediaMetadata(metadata)
+            .build()
+
+//        controller?.addMediaItem(item)
+//        controller?.prepare()
+//        controller?.play()
+
         viewModelScope.launch {
-            setupPlayer()
-
-            if (!isPlayerSetUp.value) {
-                mediaController = MediaController.Builder(
-                    applicationContext,
-                    SessionToken(
-                        applicationContext,
-                        ComponentName(applicationContext, PlaybackService::class.java)
-                    )
-                ).buildAsync().await()
-
-                mediaController?.run {
-                    if (mediaItemCount > 0) {
-                        prepare()
-                        play()
-                        addListener(listener)
-                    }
-                }
-            }
-
-            mediaController?.clearMediaItems()
-            val metadata = MediaMetadata.Builder()
-                .setDisplayTitle(episodeUi.title)
-                .setArtworkUri(episodeUi.imageUrl.toUri())
-                // .setGenre(genres)
-                .build()
-
-            mediaController?.updatePlaylist(
-                listOf(
-                    MediaItem.Builder()
-                        .setUri(episodeUi.audioUrl.toUri())
-                        .setMediaId(episodeUi.id.toString())
-                        .setMediaMetadata(metadata)
-                        .build()
-                )
-            )
-            mediaController?.playMediaAt(0)
-
-            updateState(
-                lastContentState.copy(
-                    mediaPlayerContent = lastContentState.mediaPlayerContent.copy(
-                        enabled = true,
-                        title = episodeUi.title,
-                        imageUrl = episodeUi.imageUrl
-                    )
-                )
-            )
-
-//            emitEvent(
-//                HomeEvent.PlayEpisode(
-//                    imageUri = episodeUi.imageUrl.toUri(),
-//                    title = episodeUi.title,
-//                    uri = episodeUi.audioUrl.toUri(),
-//                    id = episodeUi.id.toString()
-//                )
-//            )
+            jetAudioServiceHandler.setPlayMediaItem(item)
         }
     }
 
