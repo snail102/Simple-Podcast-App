@@ -13,6 +13,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import ru.anydevprojects.simplepodcastapp.home.presentation.HomeScreen
 import ru.anydevprojects.simplepodcastapp.home.presentation.HomeScreenNavigation
+import ru.anydevprojects.simplepodcastapp.playbackQueue.presentation.PlaybackQueueScreen
+import ru.anydevprojects.simplepodcastapp.playbackQueue.presentation.PlaybackQueueScreenNavigation
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.PodcastEpisodeScreen
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.PodcastEpisodeScreenNavigation
 import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.PodcastFeedScreen
@@ -52,8 +54,12 @@ class MainActivity : ComponentActivity() {
                                             episodeId = episodeId
                                         )
                                     )
+                                },
+                                onPlaybackQueueBtnClick = {
+                                    navController.navigate(
+                                        PlaybackQueueScreenNavigation
+                                    )
                                 }
-
                             )
                         }
                         composable<PodcastFeedScreenNavigation> {
@@ -76,6 +82,10 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack()
                                 }
                             )
+                        }
+
+                        composable<PlaybackQueueScreenNavigation> {
+                            PlaybackQueueScreen()
                         }
                     }
                 }

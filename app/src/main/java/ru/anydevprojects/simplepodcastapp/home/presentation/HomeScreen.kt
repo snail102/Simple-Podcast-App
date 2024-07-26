@@ -47,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
@@ -56,9 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.media3.session.MediaController
 import coil.compose.AsyncImage
-import com.google.common.util.concurrent.ListenableFuture
 import org.koin.androidx.compose.koinViewModel
 import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeedSearched
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeEvent
@@ -78,6 +75,7 @@ fun HomeScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
     onPodcastClick: (Long) -> Unit,
     onEpisodeClick: (Long) -> Unit,
+    onPlaybackQueueBtnClick: () -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val state by viewModel.stateFlow.collectAsState()
@@ -242,7 +240,11 @@ private fun ContentHomeScreen(
                     onChangePlayState = {
                         viewModel.onIntent(HomeIntent.OnChangePayingCurrentMediaBtnClick)
                     },
-                    bottomPadding = contentPadding.calculateBottomPadding()
+                    bottomPadding = contentPadding.calculateBottomPadding(),
+                    availablePlaybackQueue = false,
+                    onPlaybackQueueBtnClick = {
+                        onPlaybackQueueBtnClick()
+                    }
                 )
             }
         }

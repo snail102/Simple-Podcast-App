@@ -1,0 +1,6 @@
+package ru.anydevprojects.simplepodcastapp.playbackQueue.presentation
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+object PlaybackQueueScreenNavigation

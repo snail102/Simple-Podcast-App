@@ -1,6 +1,7 @@
 package ru.anydevprojects.simplepodcastapp.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,45 +29,72 @@ fun BottomMediaPlayer(
     imageUrl: String,
     title: String,
     isPlaying: Boolean,
+    availablePlaybackQueue: Boolean,
+    modifier: Modifier = Modifier,
     onChangePlayState: () -> Unit,
-    bottomPadding: Dp = 0.dp,
-    modifier: Modifier = Modifier
+    onPlaybackQueueBtnClick: () -> Unit,
+    bottomPadding: Dp = 0.dp
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(color = Color.Gray)
-            .padding(16.dp)
-            .padding(bottom = bottomPadding),
-        verticalAlignment = Alignment.Top
-    ) {
-        AsyncImage(
+    Box(modifier = modifier) {
+        Row(
             modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(16.dp)),
-            model = imageUrl,
-            contentDescription = null
-        )
-        Text(
-            text = title,
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .weight(1f),
-            overflow = TextOverflow.Ellipsis,
-            minLines = 2,
-            maxLines = 2
-        )
-        IconButton(
-            onClick = onChangePlayState
+                .then(
+                    if (availablePlaybackQueue) {
+                        Modifier.padding(top = 50.dp)
+                    } else {
+                        Modifier
+                    }
+                )
+                .fillMaxWidth()
+                .background(color = Color.Gray)
+                .padding(16.dp)
+                .padding(bottom = bottomPadding),
+            verticalAlignment = Alignment.Top
         ) {
-            Icon(
-                if (isPlaying) {
-                    painterResource(R.drawable.ic_pause)
-                } else {
-                    painterResource(R.drawable.ic_play)
-                },
+            AsyncImage(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(16.dp)),
+                model = imageUrl,
                 contentDescription = null
             )
+            Text(
+                text = title,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .weight(1f),
+                overflow = TextOverflow.Ellipsis,
+                minLines = 2,
+                maxLines = 2
+            )
+            IconButton(
+                onClick = onChangePlayState
+            ) {
+                Icon(
+                    if (isPlaying) {
+                        painterResource(R.drawable.ic_pause)
+                    } else {
+                        painterResource(R.drawable.ic_play)
+                    },
+                    contentDescription = null
+                )
+            }
+        }
+        if (availablePlaybackQueue) {
+            IconButton(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .background(color = Color.Gray, RoundedCornerShape(16.dp)),
+                onClick = {
+                    onPlaybackQueueBtnClick()
+                }
+            ) {
+                Icon(
+                    painterResource(R.drawable.ic_queue_music),
+                    contentDescription = null,
+                    tint = Color.White
+                )
+            }
         }
     }
 }
@@ -79,7 +107,10 @@ private fun BottomMediaPlayerPreview() {
             imageUrl = "",
             title = "title",
             isPlaying = true,
-            onChangePlayState = {}
+            onChangePlayState = {},
+            onPlaybackQueueBtnClick = {},
+            bottomPadding = 0.dp,
+            availablePlaybackQueue = true
         )
     }
 }
