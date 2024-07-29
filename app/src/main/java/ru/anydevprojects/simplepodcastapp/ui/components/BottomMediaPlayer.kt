@@ -35,21 +35,13 @@ fun BottomMediaPlayer(
     onPlaybackQueueBtnClick: () -> Unit,
     bottomPadding: Dp = 0.dp
 ) {
-    Box(modifier = modifier) {
         Row(
-            modifier = Modifier
-                .then(
-                    if (availablePlaybackQueue) {
-                        Modifier.padding(top = 50.dp)
-                    } else {
-                        Modifier
-                    }
-                )
+            modifier = modifier
                 .fillMaxWidth()
                 .background(color = Color.Gray)
                 .padding(16.dp)
                 .padding(bottom = bottomPadding),
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
                 modifier = Modifier
@@ -67,36 +59,31 @@ fun BottomMediaPlayer(
                 minLines = 2,
                 maxLines = 2
             )
-            IconButton(
-                onClick = onChangePlayState
-            ) {
-                Icon(
-                    if (isPlaying) {
-                        painterResource(R.drawable.ic_pause)
-                    } else {
-                        painterResource(R.drawable.ic_play)
-                    },
-                    contentDescription = null
-                )
-            }
-        }
-        if (availablePlaybackQueue) {
-            IconButton(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .background(color = Color.Gray, RoundedCornerShape(16.dp)),
-                onClick = {
-                    onPlaybackQueueBtnClick()
+            if (availablePlaybackQueue) {
+                IconButton(
+                    modifier = Modifier
+                        .padding(end = 16.dp),
+                    onClick = {
+                        onPlaybackQueueBtnClick()
+                    }
+                ) {
+                    Icon(
+                        modifier = Modifier,
+                        painter = painterResource(R.drawable.ic_queue_music),
+                        contentDescription = null,
+                        tint = Color.White
+                    )
                 }
-            ) {
-                Icon(
-                    painterResource(R.drawable.ic_queue_music),
-                    contentDescription = null,
-                    tint = Color.White
-                )
             }
+
+            PlayControlIconBtn(
+                modifier = Modifier,
+                isPlaying = isPlaying,
+                onClick = onChangePlayState,
+                sizeIcon = 48.dp
+            )
         }
-    }
+
 }
 
 @Preview

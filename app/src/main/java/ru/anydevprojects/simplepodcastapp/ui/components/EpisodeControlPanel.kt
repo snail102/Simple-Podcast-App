@@ -1,5 +1,6 @@
 package ru.anydevprojects.simplepodcastapp.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.anydevprojects.simplepodcastapp.R
 import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
@@ -34,57 +36,109 @@ fun EpisodeControlPanel(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End)
     ) {
-        IconButton(
+        DownloadControlIconBtn(
             modifier = Modifier.size(32.dp),
+            isDownloaded = isDownloaded,
+            tint = tint,
             onClick = {
                 onDownloadControlClick()
             }
-        ) {
-            Icon(
-                if (isDownloaded) {
-                    painterResource(R.drawable.ic_downloaded_done)
-                } else {
-                    painterResource(R.drawable.ic_download)
-                },
-                contentDescription = null,
-                tint = tint
-            )
-        }
+        )
 
-        IconButton(
+        AddPlaybackListControlIconBtn(
             modifier = Modifier.size(32.dp),
+            isAdded = isAddedPlaylist,
+            tint = tint,
             onClick = {
                 onAddPlaylistControlClick()
             }
-        ) {
-            Icon(
-                if (isAddedPlaylist) {
-                    painterResource(R.drawable.ic_added_list)
-                } else {
-                    painterResource(R.drawable.ic_add_list)
-                },
-                contentDescription = null,
-                tint = tint
-            )
-        }
+        )
 
-        IconButton(
+        PlayControlIconBtn(
             modifier = Modifier.size(32.dp),
+            isPlaying = isPlaying,
+            tint = tint,
             onClick = {
                 onPlayControlClick()
             }
-        ) {
-            Icon(
-                if (isPlaying) {
-                    painterResource(R.drawable.ic_pause)
-                } else {
-                    painterResource(R.drawable.ic_play)
-                },
-                contentDescription = null,
-                tint = tint
-            )
-        }
+        )
     }
+}
+
+@Composable
+private fun IconControlBtn(
+    isActivate: Boolean,
+    @DrawableRes activateIconResId: Int,
+    @DrawableRes deactivateIconResId: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color = Color.White,
+    sizeIcon: Dp = 24.dp
+) {
+    IconButton(
+        modifier = modifier,
+        onClick = onClick
+    ) {
+        Icon(
+            modifier = Modifier.size(sizeIcon),
+            painter = painterResource(if (isActivate) activateIconResId else deactivateIconResId),
+            contentDescription = null,
+            tint = tint
+        )
+    }
+}
+
+@Composable
+fun PlayControlIconBtn(
+    isPlaying: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color = Color.White,
+    sizeIcon: Dp = 24.dp
+) {
+    IconControlBtn(
+        modifier = modifier,
+        isActivate = isPlaying,
+        activateIconResId = R.drawable.ic_pause,
+        deactivateIconResId = R.drawable.ic_play,
+        onClick = onClick,
+        tint = tint,
+        sizeIcon = sizeIcon
+    )
+}
+
+@Composable
+fun DownloadControlIconBtn(
+    isDownloaded: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color = Color.White
+) {
+    IconControlBtn(
+        modifier = modifier,
+        isActivate = isDownloaded,
+        activateIconResId = R.drawable.ic_downloaded_done,
+        deactivateIconResId = R.drawable.ic_download,
+        onClick = onClick,
+        tint = tint
+    )
+}
+
+@Composable
+fun AddPlaybackListControlIconBtn(
+    isAdded: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color = Color.White
+) {
+    IconControlBtn(
+        modifier = modifier,
+        isActivate = isAdded,
+        activateIconResId = R.drawable.ic_add_list,
+        deactivateIconResId = R.drawable.ic_added_list,
+        onClick = onClick,
+        tint = tint
+    )
 }
 
 @Preview

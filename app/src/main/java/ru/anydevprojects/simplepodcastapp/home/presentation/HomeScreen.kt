@@ -75,7 +75,7 @@ fun HomeScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
     onPodcastClick: (Long) -> Unit,
     onEpisodeClick: (Long) -> Unit,
-    onPlaybackQueueBtnClick: () -> Unit,
+    onPlaybackQueueClick: () -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val state by viewModel.stateFlow.collectAsState()
@@ -122,7 +122,8 @@ fun HomeScreen(
                     onEpisodeClick = {
                         onEpisodeClick(it)
                     },
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    onPlaybackQueueClick = onPlaybackQueueClick
                 )
             }
 
@@ -138,6 +139,7 @@ private fun ContentHomeScreen(
     homeState: HomeState.Content,
     onPodcastClick: (Long) -> Unit,
     onEpisodeClick: (Long) -> Unit,
+    onPlaybackQueueClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues,
     viewModel: HomeViewModel
@@ -241,9 +243,9 @@ private fun ContentHomeScreen(
                         viewModel.onIntent(HomeIntent.OnChangePayingCurrentMediaBtnClick)
                     },
                     bottomPadding = contentPadding.calculateBottomPadding(),
-                    availablePlaybackQueue = false,
+                    availablePlaybackQueue = true,
                     onPlaybackQueueBtnClick = {
-                        onPlaybackQueueBtnClick()
+                        onPlaybackQueueClick()
                     }
                 )
             }

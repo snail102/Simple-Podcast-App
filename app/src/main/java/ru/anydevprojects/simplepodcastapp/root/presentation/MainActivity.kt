@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
                                         )
                                     )
                                 },
-                                onPlaybackQueueBtnClick = {
+                                onPlaybackQueueClick = {
                                     navController.navigate(
                                         PlaybackQueueScreenNavigation
                                     )
@@ -85,7 +85,11 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable<PlaybackQueueScreenNavigation> {
-                            PlaybackQueueScreen()
+                            PlaybackQueueScreen(
+                                onBackClick = {
+                                    navController.popBackStack()
+                                }
+                            )
                         }
                     }
                 }
