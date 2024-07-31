@@ -32,6 +32,9 @@ data class PodcastEpisodeDto(
     @SerialName("feedImage")
     val feedImage: String,
 
+    @SerialName("image")
+    val image: String,
+
     @SerialName("feedId")
     val feedId: Long
 )

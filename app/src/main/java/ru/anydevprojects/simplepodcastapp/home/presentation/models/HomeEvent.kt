@@ -15,4 +15,6 @@ sealed interface HomeEvent : ViewEvent {
         val uri: Uri,
         val id: String
     ) : HomeEvent
+
+    data object SelectImportFile: HomeEvent
 }

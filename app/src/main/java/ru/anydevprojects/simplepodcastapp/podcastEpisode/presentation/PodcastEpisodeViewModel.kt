@@ -41,7 +41,7 @@ class PodcastEpisodeViewModel(
                     PodcastEpisodeState.Content(
                         title = it.title,
                         description = it.description,
-                        podcastImageUrl = it.feedImage
+                        podcastImageUrl = it.image
                     )
                 )
             }.launchIn(viewModelScope)

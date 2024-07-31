@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import ru.anydevprojects.simplepodcastapp.utils.currentMediaItems
 
 @OptIn(UnstableApi::class)
 class JetAudioServiceHandler(
@@ -28,6 +30,27 @@ class JetAudioServiceHandler(
     private val _audioState: MutableStateFlow<JetAudioState> =
         MutableStateFlow(JetAudioState.Initial)
     val audioState: StateFlow<JetAudioState> = _audioState.asStateFlow()
+
+    private val _audioItemState: MutableStateFlow<AudioItemState> =
+        MutableStateFlow(AudioItemState.Empty)
+    val audioItemState: StateFlow<AudioItemState> = _audioItemState.asStateFlow()
+
+    private val _isPlaybackQueue: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val isPlaybackQueue = _isPlaybackQueue.asStateFlow()
+
+    private val _playbackQueueList: MutableStateFlow<List<MediaItem>> =
+        MutableStateFlow(emptyList())
+    val playbackQueueList = _playbackQueueList.asStateFlow()
+
+    val currentPlayingId: String?
+        get() {
+            val currentItem = audioItemState.value
+            return if (currentItem is AudioItemState.Current) {
+                currentItem.id
+            } else {
+                null
+            }
+        }
 
     private var controller: MediaController? = null
 
@@ -86,8 +109,8 @@ class JetAudioServiceHandler(
 
                     else -> {
                         exoPlayer.seekToDefaultPosition(selectedAudioIndex)
-                        _audioState.value = JetAudioState.Playing(
-                            isPlaying = true,
+                        _audioState.value = JetAudioState.Playing(isPlaying = true)
+                        _audioItemState.value = AudioItemState.Current(
                             id = exoPlayer.currentMediaItem?.mediaId.orEmpty(),
                             title = exoPlayer.mediaMetadata.title.toString(),
                             imageUri = exoPlayer.mediaMetadata.artworkUri
@@ -119,13 +142,21 @@ class JetAudioServiceHandler(
         }
     }
 
+    override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+        super.onTimelineChanged(timeline, reason)
+        _isPlaybackQueue.value = exoPlayer.getMediaItemCount() > 1
+        _playbackQueueList.value = exoPlayer.currentMediaItems
+    }
+
     override fun onIsPlayingChanged(isPlaying: Boolean) {
-        _audioState.value = JetAudioState.Playing(
-            isPlaying = isPlaying,
+        _audioState.value = JetAudioState.Playing(isPlaying = isPlaying)
+
+        _audioItemState.value = AudioItemState.Current(
             id = exoPlayer.currentMediaItem?.mediaId.orEmpty(),
             title = exoPlayer.mediaMetadata.title.toString(),
             imageUri = exoPlayer.mediaMetadata.artworkUri
         )
+
         _audioState.value = JetAudioState.CurrentPlaying(
             exoPlayer.currentMediaItemIndex
         )
@@ -144,12 +175,14 @@ class JetAudioServiceHandler(
             stopProgressUpdate()
         } else {
             exoPlayer.play()
-            _audioState.value = JetAudioState.Playing(
-                isPlaying = true,
+            _audioState.value = JetAudioState.Playing(isPlaying = true)
+
+            _audioItemState.value = AudioItemState.Current(
                 id = exoPlayer.currentMediaItem?.mediaId.orEmpty(),
-                title = exoPlayer.mediaMetadata.title?.toString().orEmpty(),
+                title = exoPlayer.mediaMetadata.title.toString(),
                 imageUri = exoPlayer.mediaMetadata.artworkUri
             )
+
             startProgressUpdate()
         }
     }
@@ -163,10 +196,11 @@ class JetAudioServiceHandler(
 
     private fun stopProgressUpdate() {
         job?.cancel()
-        _audioState.value = JetAudioState.Playing(
-            isPlaying = false,
+        _audioState.value = JetAudioState.Playing(isPlaying = false)
+
+        _audioItemState.value = AudioItemState.Current(
             id = exoPlayer.currentMediaItem?.mediaId.orEmpty(),
-            title = exoPlayer.mediaMetadata.title?.toString().orEmpty(),
+            title = exoPlayer.mediaMetadata.title.toString(),
             imageUri = exoPlayer.mediaMetadata.artworkUri
         )
     }
@@ -188,12 +222,17 @@ sealed class JetAudioState {
     data class Ready(val duration: Long) : JetAudioState()
     data class Progress(val progress: Long) : JetAudioState()
     data class Buffering(val progress: Long) : JetAudioState()
-    data class Playing(
-        val isPlaying: Boolean,
+    data class Playing(val isPlaying: Boolean) : JetAudioState()
+
+    data class CurrentPlaying(val mediaItemIndex: Int) : JetAudioState()
+}
+
+sealed class AudioItemState {
+    data object Empty : AudioItemState()
+
+    data class Current(
         val id: String,
         val title: String,
         val imageUri: Uri?
-    ) : JetAudioState()
-
-    data class CurrentPlaying(val mediaItemIndex: Int) : JetAudioState()
+    ) : AudioItemState()
 }

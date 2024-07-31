@@ -1,5 +1,6 @@
 package ru.anydevprojects.simplepodcastapp.home.presentation.models
 
+import android.net.Uri
 import ru.anydevprojects.simplepodcastapp.core.ui.ViewIntent
 
 sealed interface HomeIntent : ViewIntent {
@@ -9,4 +10,10 @@ sealed interface HomeIntent : ViewIntent {
     data object OnBackFromSearchClick : HomeIntent
     data class OnPlayEpisodeBtnClick(val episodeUi: PodcastEpisodeUi) : HomeIntent
     data object OnChangePayingCurrentMediaBtnClick : HomeIntent
+    data object OnMoreClick : HomeIntent
+    data object OnDismissMore : HomeIntent
+    data object OnImportOpmlClick : HomeIntent
+    data object OnExportOpmlClick : HomeIntent
+
+    data class SelectedImportFile(val uri: Uri?) : HomeIntent
 }

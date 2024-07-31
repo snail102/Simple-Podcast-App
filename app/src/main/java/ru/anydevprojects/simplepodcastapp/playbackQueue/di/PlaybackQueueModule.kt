@@ -5,5 +5,5 @@ import org.koin.dsl.module
 import ru.anydevprojects.simplepodcastapp.playbackQueue.presentation.PlaybackQueueViewModel
 
 val playbackQueueModule = module {
-    viewModel { PlaybackQueueViewModel() }
+    viewModel { PlaybackQueueViewModel(get()) }
 }

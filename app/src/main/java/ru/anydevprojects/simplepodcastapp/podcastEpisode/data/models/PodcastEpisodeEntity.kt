@@ -19,8 +19,8 @@ data class PodcastEpisodeEntity(
     @ColumnInfo(name = "enclosure_length")
     val enclosureLength: Int,
     val duration: Int?,
-    @ColumnInfo(name = "feed_image")
-    val feedImage: String,
+    @ColumnInfo(name = "image")
+    val image: String,
     @ColumnInfo(name = "feed_id")
     val feedId: Long
 )

@@ -1,6 +1,9 @@
 package ru.anydevprojects.simplepodcastapp.home.presentation
 
+import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateContentSize
@@ -29,6 +32,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,6 +47,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,7 +63,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import org.koin.androidx.compose.koinViewModel
+import ru.anydevprojects.simplepodcastapp.R
 import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeedSearched
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeEvent
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeIntent
@@ -66,7 +78,7 @@ import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastSubscr
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastsSubscriptions
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.SearchContent
 import ru.anydevprojects.simplepodcastapp.ui.components.BottomMediaPlayer
-import ru.anydevprojects.simplepodcastapp.ui.components.EpisodeControlPanel
+import ru.anydevprojects.simplepodcastapp.ui.components.PlayControlIconBtn
 import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -78,6 +90,11 @@ fun HomeScreen(
     onPlaybackQueueClick: () -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            viewModel.onIntent(HomeIntent.SelectedImportFile(uri))
+        }
+
     val state by viewModel.stateFlow.collectAsState()
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -90,6 +107,8 @@ fun HomeScreen(
                 HomeEvent.HideKeyboard -> keyboardController?.hide()
                 is HomeEvent.PlayEpisode -> {
                 }
+
+                HomeEvent.SelectImportFile -> launcher.launch("text/xml")
             }
         }
     }
@@ -129,10 +148,41 @@ fun HomeScreen(
 
             HomeState.Loading -> {
             }
+
+            HomeState.ExportProcessing -> ExportProcessingScreen(
+                modifier = Modifier.padding(
+                    paddingValues
+                )
+            )
+
+            HomeState.ImportProcessing -> ImportProcessingScreen(
+                modifier = Modifier.padding(
+                    paddingValues
+                )
+            )
         }
     }
 }
 
+@Composable
+private fun ImportProcessingScreen(modifier: Modifier = Modifier) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_import))
+
+    Box(modifier = modifier) {
+        LottieAnimation(composition, iterations = LottieConstants.IterateForever, speed = 1.5f)
+    }
+}
+
+@Composable
+private fun ExportProcessingScreen(modifier: Modifier = Modifier) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_export))
+
+    Box(modifier = modifier) {
+        LottieAnimation(composition, iterations = LottieConstants.IterateForever, speed = 1.5f)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ContentHomeScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -187,13 +237,26 @@ private fun ContentHomeScreen(
             },
             onItemClick = { id ->
                 onPodcastClick(id)
+            },
+            onMoreClick = {
+                viewModel.onIntent(HomeIntent.OnMoreClick)
+            },
+            onDismissMore = {
+                viewModel.onIntent(HomeIntent.OnDismissMore)
+            },
+            onImportOpmlClick = {
+                viewModel.onIntent(HomeIntent.OnImportOpmlClick)
+            },
+            onExportOpmlClick = {
+                viewModel.onIntent(HomeIntent.OnExportOpmlClick)
             }
         )
 
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
             state = lazyListState,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(bottom = 80.dp + contentPadding.calculateBottomPadding())
         ) {
             items(
                 items = homeState.homeScreenItems,
@@ -243,7 +306,7 @@ private fun ContentHomeScreen(
                         viewModel.onIntent(HomeIntent.OnChangePayingCurrentMediaBtnClick)
                     },
                     bottomPadding = contentPadding.calculateBottomPadding(),
-                    availablePlaybackQueue = true,
+                    availablePlaybackQueue = homeState.mediaPlayerContent.enabledPlaybackQueue,
                     onPlaybackQueueBtnClick = {
                         onPlaybackQueueClick()
                     }
@@ -333,10 +396,12 @@ private fun PodcastEpisodeItem(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 16.dp)
+                .padding(start = 16.dp),
+            horizontalAlignment = Alignment.End
         ) {
             Text(
-                podcastEpisodeUi.title,
+                modifier = Modifier.fillMaxWidth(),
+                text = podcastEpisodeUi.title,
                 fontSize = 15.sp,
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 16.sp,
@@ -344,14 +409,11 @@ private fun PodcastEpisodeItem(
                 maxLines = 3,
                 minLines = 3
             )
-            EpisodeControlPanel(
-                modifier = Modifier.fillMaxWidth(),
-                isDownloaded = false,
-                isAddedPlaylist = false,
+
+            PlayControlIconBtn(
+                modifier = Modifier,
                 isPlaying = podcastEpisodeUi.isPlaying,
-                onDownloadControlClick = {},
-                onAddPlaylistControlClick = {},
-                onPlayControlClick = {
+                onClick = {
                     onPlayBtnClick()
                 },
                 tint = Color.Black
@@ -387,7 +449,11 @@ private fun SearchBarPodcastFeeds(
     onSearch: (String) -> Unit,
     onBackClick: () -> Unit,
     onClearClick: () -> Unit,
+    onMoreClick: () -> Unit,
+    onDismissMore: () -> Unit,
     onItemClick: (Long) -> Unit,
+    onImportOpmlClick: () -> Unit,
+    onExportOpmlClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isLoading: Boolean = homeState.isLoading
@@ -445,6 +511,58 @@ private fun SearchBarPodcastFeeds(
             if (enabledClear) {
                 ClearButton(
                     onClick = onClearClick
+                )
+            } else {
+                if (!isActivate) {
+                    IconButton(
+                        onClick = {
+                            onMoreClick()
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_more_vert),
+                            contentDescription = null,
+                            tint = Color.Black
+                        )
+                    }
+                }
+            }
+
+            DropdownMenu(
+                expanded = homeState.expandedMoreMenu,
+                onDismissRequest = {
+                    onDismissMore()
+                }
+            ) {
+                DropdownMenuItem(
+                    onClick = {
+                        onImportOpmlClick()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrow_down),
+                            contentDescription = null,
+                            tint = Color.Black
+                        )
+                    },
+                    text = {
+                        Text("Импорт Opml")
+                    }
+                )
+                DropdownMenuItem(
+                    onClick = {
+                        onExportOpmlClick()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrow_up),
+                            contentDescription = null,
+                            tint = Color.Black
+                        )
+                    },
+                    text = {
+                        Text("Экспорт Opml")
+                    }
                 )
             }
         }

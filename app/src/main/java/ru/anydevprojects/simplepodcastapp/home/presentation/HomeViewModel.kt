@@ -2,6 +2,8 @@ package ru.anydevprojects.simplepodcastapp.home.presentation
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.net.Uri
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.core.net.toUri
@@ -10,6 +12,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.room.util.copy
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -25,6 +28,7 @@ import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeState
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastEpisodeUi
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastsSubscriptions
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.SearchContent
+import ru.anydevprojects.simplepodcastapp.media.AudioItemState
 import ru.anydevprojects.simplepodcastapp.media.JetAudioServiceHandler
 import ru.anydevprojects.simplepodcastapp.media.JetAudioState
 import ru.anydevprojects.simplepodcastapp.media.PlayerEvent
@@ -59,14 +63,12 @@ class HomeViewModel(
                     }
 
                     is JetAudioState.Playing -> {
-                        val id = mediaState.id.toLongOrNull()
+                        val id = jetAudioServiceHandler.currentPlayingId?.toLongOrNull()
                         updateState(
                             lastContentState.copy(
                                 mediaPlayerContent = lastContentState.mediaPlayerContent.copy(
                                     enabled = true,
-                                    isPlaying = mediaState.isPlaying,
-                                    title = mediaState.title,
-                                    imageUrl = mediaState.imageUri?.toString().orEmpty()
+                                    isPlaying = mediaState.isPlaying
                                 ),
                                 homeScreenItems = lastContentState.homeScreenItems.map {
                                     when (it) {
@@ -102,6 +104,45 @@ class HomeViewModel(
                 }
             }
         }
+
+        jetAudioServiceHandler.audioItemState.onEach { value: AudioItemState ->
+
+            when (value) {
+                is AudioItemState.Current -> {
+                    updateState(
+                        lastContentState.copy(
+                            mediaPlayerContent = lastContentState.mediaPlayerContent.copy(
+                                enabled = true,
+                                title = value.title,
+                                imageUrl = value.imageUri?.toString().orEmpty()
+                            )
+                        )
+                    )
+                }
+
+                AudioItemState.Empty -> {
+                    updateState(
+                        lastContentState.copy(
+                            mediaPlayerContent = lastContentState.mediaPlayerContent.copy(
+                                enabled = false,
+                                title = "",
+                                imageUrl = ""
+                            )
+                        )
+                    )
+                }
+            }
+        }.launchIn(viewModelScope)
+
+        jetAudioServiceHandler.isPlaybackQueue.onEach {
+            updateState(
+                lastContentState.copy(
+                    mediaPlayerContent = lastContentState.mediaPlayerContent.copy(
+                        enabledPlaybackQueue = it
+                    )
+                )
+            )
+        }.launchIn(viewModelScope)
     }
 
     init {
@@ -123,30 +164,92 @@ class HomeViewModel(
                     )
                 }
             }
+
+            HomeIntent.OnDismissMore -> dismissMoreMenu()
+            HomeIntent.OnMoreClick -> showMoreMenu()
+            HomeIntent.OnExportOpmlClick -> exportOpml()
+            HomeIntent.OnImportOpmlClick -> importOpml()
+            is HomeIntent.SelectedImportFile -> startImportDataFromFile(intent.uri)
         }
+    }
+
+    private fun startImportDataFromFile(uri: Uri?) {
+        viewModelScope.launch {
+            Log.d("importFile", uri.toString())
+            delay(3000)
+            updateState(
+                lastContentState.copy(
+                    searchContent = lastContentState.searchContent.copy(
+                        expandedMoreMenu = false
+                    )
+                )
+            )
+        }
+    }
+
+    private fun exportOpml() {
+        updateState(HomeState.ExportProcessing)
+        viewModelScope.launch {
+            delay(3000)
+            updateState(
+                lastContentState.copy(
+                    searchContent = lastContentState.searchContent.copy(
+                        expandedMoreMenu = false
+                    )
+                )
+            )
+        }
+    }
+
+    private fun importOpml() {
+        updateState(HomeState.ImportProcessing)
+        emitEvent(HomeEvent.SelectImportFile)
+    }
+
+    private fun showMoreMenu() {
+        updateState(
+            lastContentState.copy(
+                searchContent = lastContentState.searchContent.copy(
+                    expandedMoreMenu = true
+                )
+            )
+        )
+    }
+
+    private fun dismissMoreMenu() {
+        updateState(
+            lastContentState.copy(
+                searchContent = lastContentState.searchContent.copy(
+                    expandedMoreMenu = false
+                )
+            )
+        )
     }
 
     @OptIn(UnstableApi::class)
     @SuppressLint("RestrictedApi")
     private fun playEpisode(episodeUi: PodcastEpisodeUi) {
-        val metadata = MediaMetadata.Builder()
-            .setDisplayTitle(episodeUi.title)
-            .setArtworkUri(episodeUi.imageUrl.toUri())
-            // .setGenre(genres)
-            .build()
-
-        val item = MediaItem.Builder()
-            .setUri(episodeUi.audioUrl.toUri())
-            .setMediaId(episodeUi.id.toString())
-            .setMediaMetadata(metadata)
-            .build()
-
-//        controller?.addMediaItem(item)
-//        controller?.prepare()
-//        controller?.play()
-
         viewModelScope.launch {
-            jetAudioServiceHandler.setPlayMediaItem(item)
+            val state = jetAudioServiceHandler.audioItemState.value
+            if (state is AudioItemState.Current && state.id == episodeUi.id.toString()) {
+                jetAudioServiceHandler.onPlayerEvents(
+                    PlayerEvent.PlayPause
+                )
+            } else {
+                val metadata = MediaMetadata.Builder()
+                    .setDisplayTitle(episodeUi.title)
+                    .setArtworkUri(episodeUi.imageUrl.toUri())
+                    // .setGenre(genres)
+                    .build()
+
+                val item = MediaItem.Builder()
+                    .setUri(episodeUi.audioUrl.toUri())
+                    .setMediaId(episodeUi.id.toString())
+                    .setMediaMetadata(metadata)
+                    .build()
+
+                jetAudioServiceHandler.setPlayMediaItem(item)
+            }
         }
     }
 
