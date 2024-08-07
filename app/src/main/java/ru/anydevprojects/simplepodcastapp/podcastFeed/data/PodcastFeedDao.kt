@@ -17,6 +17,9 @@ interface PodcastFeedDao {
     @Query("SELECT * FROM podcast_feed WHERE id = :id")
     suspend fun getPodcastFeedById(id: Long): PodcastFeedEntity?
 
+    @Query("SELECT * FROM podcast_feed WHERE url = :url")
+    suspend fun getPodcastFeedByUrl(url: String): PodcastFeedEntity?
+
     @Query("SELECT * FROM podcast_feed WHERE id = :id")
     fun getPodcastFeedFlowById(id: Long): Flow<PodcastFeedEntity?>
 
@@ -33,6 +36,20 @@ interface PodcastFeedDao {
     """
     )
     fun getPodcastWithSubscription(podcastId: Long): Flow<PodcastFeedWithSubscription?>
+
+    @Query(
+        """
+        SELECT p.*, 
+               CASE 
+                   WHEN s.podcast_id IS NOT NULL THEN 1 
+                   ELSE 0 
+               END AS isSubscribed
+        FROM podcast_feed p
+        LEFT JOIN subscription_podcast_feed s ON p.id = s.podcast_id
+        WHERE p.url = :podcastUrl
+    """
+    )
+    suspend fun getPodcastWithSubscriptionByUrl(podcastUrl: String): PodcastFeedWithSubscription?
 
     @Query(
         """

@@ -59,6 +59,7 @@ import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
 fun PodcastFeedScreen(
     podcastId: Long,
     onNavigateToEpisodeDetail: (Long) -> Unit,
+    onBackClick: () -> Unit,
     viewModel: PodcastFeedViewModel = koinViewModel(
         parameters = {
             parametersOf(podcastId)
@@ -95,7 +96,8 @@ fun PodcastFeedScreen(
                 },
                 onEpisodeClick = {
                     onNavigateToEpisodeDetail(it.id)
-                }
+                },
+                onBackClick = onBackClick
             )
         }
     }
@@ -106,6 +108,7 @@ private fun ContentHomeScreen(
     podcastInfo: PodcastInfo,
     onChangeSubscribeBtnClick: () -> Unit,
     onEpisodeClick: (PodcastEpisodeUi) -> Unit,
+    onBackClick: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier
 ) {
@@ -135,7 +138,9 @@ private fun ContentHomeScreen(
             ) {
                 IconButton(
                     modifier = Modifier.padding(horizontal = 8.dp),
-                    onClick = {}
+                    onClick = {
+                        onBackClick()
+                    }
                 ) {
                     Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
                 }
@@ -281,7 +286,8 @@ private fun ContentPreview() {
             ),
             contentPadding = PaddingValues(),
             onChangeSubscribeBtnClick = {},
-            onEpisodeClick = {}
+            onEpisodeClick = {},
+            onBackClick  = {}
         )
     }
 }

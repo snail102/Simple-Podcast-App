@@ -28,6 +28,7 @@ import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeState
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastEpisodeUi
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastsSubscriptions
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.SearchContent
+import ru.anydevprojects.simplepodcastapp.importPodcasts.domain.ImportPodcastsRepository
 import ru.anydevprojects.simplepodcastapp.media.AudioItemState
 import ru.anydevprojects.simplepodcastapp.media.JetAudioServiceHandler
 import ru.anydevprojects.simplepodcastapp.media.JetAudioState
@@ -40,7 +41,8 @@ class HomeViewModel(
     private val podcastEpisodeRepository: PodcastEpisodeRepository,
     private val podcastFeedRepository: PodcastFeedRepository,
     private val applicationContext: Context,
-    private val jetAudioServiceHandler: JetAudioServiceHandler
+    private val jetAudioServiceHandler: JetAudioServiceHandler,
+    private val importPodcastsRepository: ImportPodcastsRepository
 ) :
     BaseViewModel<HomeState, HomeState.Content, HomeIntent, HomeEvent>(
         initialStateAndDefaultContentState = {
@@ -176,7 +178,6 @@ class HomeViewModel(
     private fun startImportDataFromFile(uri: Uri?) {
         viewModelScope.launch {
             Log.d("importFile", uri.toString())
-            delay(3000)
             updateState(
                 lastContentState.copy(
                     searchContent = lastContentState.searchContent.copy(
@@ -184,6 +185,7 @@ class HomeViewModel(
                     )
                 )
             )
+            importPodcastsRepository.import(uri.toString())
         }
     }
 

@@ -115,4 +115,6 @@ dependencies {
     implementation(libs.workmanager.core)
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation(libs.lottie.compose)
+    implementation(libs.xmlutil.core)
+    implementation(libs.xmlutil.serialization)
 }

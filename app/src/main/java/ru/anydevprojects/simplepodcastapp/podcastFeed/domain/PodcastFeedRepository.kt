@@ -11,6 +11,10 @@ interface PodcastFeedRepository {
 
     suspend fun getPodcastFeedById(id: Long): Result<PodcastFeed>
 
+    suspend fun getPodcastFeedByUrl(url: String): Result<PodcastFeed>
+
+    suspend fun getLocalPodcastFeedByUrl(url: String): PodcastFeed?
+
     suspend fun subscribeOnPodcast(podcastId: Long)
 
     suspend fun unsubscribeOnPodcast(podcastId: Long)

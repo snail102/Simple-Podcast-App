@@ -70,6 +70,9 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate(
                                         PodcastEpisodeScreenNavigation(episodeId = it)
                                     )
+                                },
+                                onBackClick = {
+                                    navController.popBackStack()
                                 }
                             )
                         }

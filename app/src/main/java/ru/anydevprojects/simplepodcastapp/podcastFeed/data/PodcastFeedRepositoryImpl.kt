@@ -38,6 +38,23 @@ class PodcastFeedRepositoryImpl(
         remotePodcastFeed
     }
 
+    override suspend fun getPodcastFeedByUrl(url: String): Result<PodcastFeed> =
+        kotlin.runCatching {
+            val podcastFeedResponse = httpClient.get("podcasts/byfeedurl") {
+                parameter("url", url)
+            }.body<PodcastFeedResponse>()
+
+            val remotePodcastFeed =
+                podcastFeedResponse.feed.toDomain(false)
+
+            podcastFeedDao.insert(remotePodcastFeed.toEntity())
+            remotePodcastFeed
+        }
+
+    override suspend fun getLocalPodcastFeedByUrl(url: String): PodcastFeed? {
+        return podcastFeedDao.getPodcastWithSubscriptionByUrl(podcastUrl = url)?.toDomain()
+    }
+
     override suspend fun subscribeOnPodcast(podcastId: Long) {
         subscriptionPodcastFeedDao.insert(SubscriptionPodcastFeedEntity(podcastId = podcastId))
     }

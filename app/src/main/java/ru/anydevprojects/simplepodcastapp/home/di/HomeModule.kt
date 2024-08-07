@@ -7,6 +7,6 @@ import ru.anydevprojects.simplepodcastapp.home.domain.HomeRepository
 import ru.anydevprojects.simplepodcastapp.home.presentation.HomeViewModel
 
 val homeModule = module {
-    viewModel { HomeViewModel(get(), get(), get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get(), get(), get()) }
     factory<HomeRepository> { HomeRepositoryImpl(get()) }
 }
