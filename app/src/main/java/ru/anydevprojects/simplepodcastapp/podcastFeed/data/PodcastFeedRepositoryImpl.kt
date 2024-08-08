@@ -26,6 +26,10 @@ class PodcastFeedRepositoryImpl(
     override fun getSubscriptionPodcasts(): Flow<List<PodcastFeed>> =
         podcastFeedDao.getSubscriptionPodcasts().map { it.map { it.toDomain(true) } }
 
+    override suspend fun getAllSubscriptionPodcasts(): List<PodcastFeed> {
+        return podcastFeedDao.getAllSubscriptionPodcasts().map { it.toDomain(subscribed = true) }
+    }
+
     override suspend fun getPodcastFeedById(id: Long): Result<PodcastFeed> = kotlin.runCatching {
         val podcastFeedResponse = httpClient.get("podcasts/byfeedid") {
             parameter("id", id)

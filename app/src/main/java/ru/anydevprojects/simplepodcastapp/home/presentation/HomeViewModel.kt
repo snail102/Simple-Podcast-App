@@ -12,12 +12,12 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.room.util.copy
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import ru.anydevprojects.simplepodcastapp.core.ui.BaseViewModel
+import ru.anydevprojects.simplepodcastapp.exportPodcasts.domain.ExportPodcastsRepository
 import ru.anydevprojects.simplepodcastapp.home.domain.HomeRepository
 import ru.anydevprojects.simplepodcastapp.home.presentation.mappers.toPodcastSubscriptionUi
 import ru.anydevprojects.simplepodcastapp.home.presentation.mappers.toUi
@@ -42,7 +42,8 @@ class HomeViewModel(
     private val podcastFeedRepository: PodcastFeedRepository,
     private val applicationContext: Context,
     private val jetAudioServiceHandler: JetAudioServiceHandler,
-    private val importPodcastsRepository: ImportPodcastsRepository
+    private val importPodcastsRepository: ImportPodcastsRepository,
+    private val exportPodcastsRepository: ExportPodcastsRepository
 ) :
     BaseViewModel<HomeState, HomeState.Content, HomeIntent, HomeEvent>(
         initialStateAndDefaultContentState = {
@@ -172,6 +173,26 @@ class HomeViewModel(
             HomeIntent.OnExportOpmlClick -> exportOpml()
             HomeIntent.OnImportOpmlClick -> importOpml()
             is HomeIntent.SelectedImportFile -> startImportDataFromFile(intent.uri)
+            is HomeIntent.SelectedFolderForExportedFile -> startExportDataToFile(intent.uri)
+        }
+    }
+
+    private fun startExportDataToFile(uri: Uri?) {
+        viewModelScope.launch {
+            Log.d("folderForExportFile", uri.toString())
+            updateState(
+                lastContentState.copy(
+                    searchContent = lastContentState.searchContent.copy(
+                        expandedMoreMenu = false
+                    )
+                )
+            )
+
+            if (uri == null) {
+                return@launch
+            }
+
+            exportPodcastsRepository.export(uri.toString())
         }
     }
 
@@ -185,22 +206,16 @@ class HomeViewModel(
                     )
                 )
             )
+            if (uri == null) {
+                return@launch
+            }
             importPodcastsRepository.import(uri.toString())
         }
     }
 
     private fun exportOpml() {
         updateState(HomeState.ExportProcessing)
-        viewModelScope.launch {
-            delay(3000)
-            updateState(
-                lastContentState.copy(
-                    searchContent = lastContentState.searchContent.copy(
-                        expandedMoreMenu = false
-                    )
-                )
-            )
-        }
+        emitEvent(HomeEvent.SelectFolderForExportFile)
     }
 
     private fun importOpml() {

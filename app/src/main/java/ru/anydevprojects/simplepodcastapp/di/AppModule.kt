@@ -3,6 +3,7 @@ package ru.anydevprojects.simplepodcastapp.di
 import org.koin.dsl.module
 import ru.anydevprojects.simplepodcastapp.core.database.databaseModule
 import ru.anydevprojects.simplepodcastapp.core.network.networkModule
+import ru.anydevprojects.simplepodcastapp.exportPodcasts.di.exportPodcastsModule
 import ru.anydevprojects.simplepodcastapp.home.di.homeModule
 import ru.anydevprojects.simplepodcastapp.importPodcasts.di.importPodcastsModule
 import ru.anydevprojects.simplepodcastapp.media.di.mediaModule
@@ -19,6 +20,7 @@ val appModule = module {
         podcastEpisodeModule,
         mediaModule,
         playbackQueueModule,
-        importPodcastsModule
+        importPodcastsModule,
+        exportPodcastsModule
     )
 }

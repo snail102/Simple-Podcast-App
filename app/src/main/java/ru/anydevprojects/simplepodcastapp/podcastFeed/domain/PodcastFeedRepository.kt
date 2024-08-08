@@ -9,6 +9,8 @@ interface PodcastFeedRepository {
 
     fun getSubscriptionPodcasts(): Flow<List<PodcastFeed>>
 
+    suspend fun getAllSubscriptionPodcasts(): List<PodcastFeed>
+
     suspend fun getPodcastFeedById(id: Long): Result<PodcastFeed>
 
     suspend fun getPodcastFeedByUrl(url: String): Result<PodcastFeed>

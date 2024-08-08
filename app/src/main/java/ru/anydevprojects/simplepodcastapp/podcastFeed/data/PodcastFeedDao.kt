@@ -60,6 +60,15 @@ interface PodcastFeedDao {
     )
     fun getSubscriptionPodcasts(): Flow<List<PodcastFeedEntity>>
 
+    @Query(
+        """
+        SELECT p.*
+        FROM podcast_feed p
+        JOIN subscription_podcast_feed s ON p.id = s.podcast_id;
+    """
+    )
+    suspend fun getAllSubscriptionPodcasts(): List<PodcastFeedEntity>
+
     @Delete
     suspend fun delete(podcastFeedEntity: PodcastFeedEntity)
 }

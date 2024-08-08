@@ -16,4 +16,5 @@ sealed interface HomeIntent : ViewIntent {
     data object OnExportOpmlClick : HomeIntent
 
     data class SelectedImportFile(val uri: Uri?) : HomeIntent
+    data class SelectedFolderForExportedFile(val uri: Uri?) : HomeIntent
 }

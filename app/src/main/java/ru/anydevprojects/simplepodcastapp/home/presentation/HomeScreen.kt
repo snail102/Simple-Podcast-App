@@ -53,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -95,6 +96,18 @@ fun HomeScreen(
             viewModel.onIntent(HomeIntent.SelectedImportFile(uri))
         }
 
+    val contentResolver = LocalContext.current.contentResolver
+
+    val folderPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        viewModel.onIntent(HomeIntent.SelectedFolderForExportedFile(uri))
+//        uri?.let {
+//            val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+//            val gg = contentResolver.takePersistableUriPermission(uri, takeFlags)
+//        }
+    }
+
     val state by viewModel.stateFlow.collectAsState()
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -109,6 +122,7 @@ fun HomeScreen(
                 }
 
                 HomeEvent.SelectImportFile -> launcher.launch("text/xml")
+                HomeEvent.SelectFolderForExportFile -> folderPickerLauncher.launch(null)
             }
         }
     }
