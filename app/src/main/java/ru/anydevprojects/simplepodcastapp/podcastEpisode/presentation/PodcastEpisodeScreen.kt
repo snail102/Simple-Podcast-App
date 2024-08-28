@@ -1,9 +1,8 @@
 package ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,9 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,14 +22,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +46,7 @@ import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.models.Pod
 import ru.anydevprojects.simplepodcastapp.ui.components.EpisodeControlPanel
 import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PodcastEpisodeScreen(
     episodeId: Long,
@@ -60,22 +59,26 @@ fun PodcastEpisodeScreen(
 ) {
     val state by viewModel.stateFlow.collectAsState()
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             EpisodeTopBar(
                 title = "title",
-                onBackClick = onBackClick
+                onBackClick = onBackClick,
+                scrollBehavior = scrollBehavior
             )
         }
     ) { paddingValues ->
         val modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues)
 
         when (val localState = state) {
             is PodcastEpisodeState.Content -> EpisodeContent(
                 state = localState,
-                modifier = modifier
+                modifier = modifier,
+                paddingValues = paddingValues
             )
 
             PodcastEpisodeState.Failed -> FailedContent(modifier = modifier)
@@ -86,13 +89,18 @@ fun PodcastEpisodeScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EpisodeTopBar(title: String, onBackClick: () -> Unit) {
+private fun EpisodeTopBar(
+    title: String,
+    onBackClick: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior? = null
+) {
     TopAppBar(
         title = {
 //            Text(
 //                text = title
-//            )
+//            ),
         },
+        scrollBehavior = scrollBehavior,
         navigationIcon = {
             IconButton(
                 onClick = onBackClick
@@ -107,7 +115,11 @@ private fun EpisodeTopBar(title: String, onBackClick: () -> Unit) {
 }
 
 @Composable
-private fun EpisodeContent(state: PodcastEpisodeState.Content, modifier: Modifier = Modifier) {
+private fun EpisodeContent(
+    state: PodcastEpisodeState.Content,
+    modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues()
+) {
     val context = LocalContext.current
     val annotatedText = remember(state.description) {
         val spanned = HtmlCompat.fromHtml(state.description, HtmlCompat.FROM_HTML_MODE_LEGACY)
@@ -116,7 +128,6 @@ private fun EpisodeContent(state: PodcastEpisodeState.Content, modifier: Modifie
             append(text)
         }
     }
-
 
     Column(
         modifier = modifier.verticalScroll(rememberScrollState())
@@ -127,6 +138,7 @@ private fun EpisodeContent(state: PodcastEpisodeState.Content, modifier: Modifie
                 .background(color = Color.Gray)
                 .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
                 .background(color = Color.Red)
+                .padding(top = paddingValues.calculateTopPadding())
                 .padding(16.dp)
         ) {
             AsyncImage(
@@ -148,7 +160,8 @@ private fun EpisodeContent(state: PodcastEpisodeState.Content, modifier: Modifie
         }
 
         EpisodeControlPanel(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
                 .background(color = Color.Gray)
                 .padding(16.dp),
@@ -170,6 +183,7 @@ private fun EpisodeContent(state: PodcastEpisodeState.Content, modifier: Modifie
 
         Card(
             modifier = Modifier
+                .padding(bottom = paddingValues.calculateBottomPadding())
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             shape = RoundedCornerShape(16.dp),

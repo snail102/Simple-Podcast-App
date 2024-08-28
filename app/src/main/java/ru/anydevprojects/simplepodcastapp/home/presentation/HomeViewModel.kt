@@ -60,9 +60,11 @@ class HomeViewModel(
             jetAudioServiceHandler.audioState.collectLatest { mediaState ->
                 when (mediaState) {
                     JetAudioState.Initial -> {
+                        Log.d("AudioService", "Initial")
                     }
 
                     is JetAudioState.Buffering -> {
+                        Log.d("AudioService", "Buffering")
                     }
 
                     is JetAudioState.Playing -> {
@@ -97,12 +99,15 @@ class HomeViewModel(
                     }
 
                     is JetAudioState.Progress -> {
+                        Log.d("AudioService", "Progress ${mediaState.progress}")
                     }
 
                     is JetAudioState.CurrentPlaying -> {
+                        Log.d("AudioService", "CurrentPlaying ${mediaState.mediaItemIndex}")
                     }
 
                     is JetAudioState.Ready -> {
+                        Log.d("AudioService", "Ready ${mediaState.duration}")
                     }
                 }
             }

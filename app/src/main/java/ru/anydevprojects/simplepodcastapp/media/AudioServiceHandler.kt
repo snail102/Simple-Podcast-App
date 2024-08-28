@@ -3,8 +3,10 @@ package ru.anydevprojects.simplepodcastapp.media
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.common.util.UnstableApi
@@ -74,6 +76,11 @@ class JetAudioServiceHandler(
         exoPlayer.addListener(this)
     }
 
+    override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+        super.onMediaMetadataChanged(mediaMetadata)
+        Log.d("test", "updated media data ${mediaMetadata.displayTitle}")
+    }
+
     suspend fun setPlayMediaItem(mediaItem: MediaItem) {
         exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
@@ -112,7 +119,7 @@ class JetAudioServiceHandler(
                         _audioState.value = JetAudioState.Playing(isPlaying = true)
                         _audioItemState.value = AudioItemState.Current(
                             id = exoPlayer.currentMediaItem?.mediaId.orEmpty(),
-                            title = exoPlayer.mediaMetadata.title.toString(),
+                            title = exoPlayer.mediaMetadata.displayTitle.toString(),
                             imageUri = exoPlayer.mediaMetadata.artworkUri
                         )
                         exoPlayer.playWhenReady = true
@@ -153,7 +160,7 @@ class JetAudioServiceHandler(
 
         _audioItemState.value = AudioItemState.Current(
             id = exoPlayer.currentMediaItem?.mediaId.orEmpty(),
-            title = exoPlayer.mediaMetadata.title.toString(),
+            title = exoPlayer.mediaMetadata.displayTitle.toString(),
             imageUri = exoPlayer.mediaMetadata.artworkUri
         )
 
@@ -179,7 +186,7 @@ class JetAudioServiceHandler(
 
             _audioItemState.value = AudioItemState.Current(
                 id = exoPlayer.currentMediaItem?.mediaId.orEmpty(),
-                title = exoPlayer.mediaMetadata.title.toString(),
+                title = exoPlayer.mediaMetadata.displayTitle.toString(),
                 imageUri = exoPlayer.mediaMetadata.artworkUri
             )
 
@@ -200,7 +207,7 @@ class JetAudioServiceHandler(
 
         _audioItemState.value = AudioItemState.Current(
             id = exoPlayer.currentMediaItem?.mediaId.orEmpty(),
-            title = exoPlayer.mediaMetadata.title.toString(),
+            title = exoPlayer.mediaMetadata.displayTitle.toString(),
             imageUri = exoPlayer.mediaMetadata.artworkUri
         )
     }
