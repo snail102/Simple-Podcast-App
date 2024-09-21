@@ -41,15 +41,15 @@ internal fun getNetworkClient(): HttpClient = HttpClient(CIO) {
             val epoch = (System.currentTimeMillis() / 1000)
             append("User-Agent", "SimplePodcastApp/${BuildConfig.VERSION_NAME}")
             append("X-Auth-Date", epoch.toString())
-            append("X-Auth-Key", CredentialsProvider.apiKey())
+            append("X-Auth-Key", CredentialsProvider.getApiKey())
             append("Authorization", authHeader(epoch))
         }
     }
 }
 
 private fun authHeader(epoch: Long): String {
-    val apiKey = CredentialsProvider.apiKey()
-    val apiSecret = CredentialsProvider.apiSecret()
+    val apiKey = CredentialsProvider.getApiKey()
+    val apiSecret = CredentialsProvider.getApiSecret()
     val authHash = sha1("$apiKey$apiSecret$epoch".toByteArray())
     return byteToHex(authHash)
 }

@@ -81,6 +81,7 @@ import ru.anydevprojects.simplepodcastapp.home.presentation.models.SearchContent
 import ru.anydevprojects.simplepodcastapp.ui.components.BottomMediaPlayer
 import ru.anydevprojects.simplepodcastapp.ui.components.PlayControlIconBtn
 import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
+import ru.anydevprojects.simplepodcastapp.utils.rememberFlowWithLifecycle
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -89,6 +90,7 @@ fun HomeScreen(
     onPodcastClick: (Long) -> Unit,
     onEpisodeClick: (Long) -> Unit,
     onPlaybackQueueClick: () -> Unit,
+    openSettings: () -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val launcher =
@@ -113,8 +115,10 @@ fun HomeScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(Unit) {
-        viewModel.events.getFlow().collect { event ->
+    val event = rememberFlowWithLifecycle(viewModel.event)
+
+    LaunchedEffect(event) {
+        event.collect { event ->
             when (event) {
                 HomeEvent.ClearFocused -> focusManager.clearFocus(true)
                 HomeEvent.HideKeyboard -> keyboardController?.hide()
@@ -123,6 +127,9 @@ fun HomeScreen(
 
                 HomeEvent.SelectImportFile -> launcher.launch("text/xml")
                 HomeEvent.SelectFolderForExportFile -> folderPickerLauncher.launch(null)
+                HomeEvent.OpenSettings -> {
+                    openSettings()
+                }
             }
         }
     }
@@ -257,6 +264,9 @@ private fun ContentHomeScreen(
             },
             onDismissMore = {
                 viewModel.onIntent(HomeIntent.OnDismissMore)
+            },
+            onSettingsClick = {
+                viewModel.onIntent(HomeIntent.OnSettingsClick)
             },
             onImportOpmlClick = {
                 viewModel.onIntent(HomeIntent.OnImportOpmlClick)
@@ -466,6 +476,7 @@ private fun SearchBarPodcastFeeds(
     onMoreClick: () -> Unit,
     onDismissMore: () -> Unit,
     onItemClick: (Long) -> Unit,
+    onSettingsClick: () -> Unit,
     onImportOpmlClick: () -> Unit,
     onExportOpmlClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -548,6 +559,22 @@ private fun SearchBarPodcastFeeds(
                     onDismissMore()
                 }
             ) {
+                DropdownMenuItem(
+                    onClick = {
+                        onSettingsClick()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_settings),
+                            contentDescription = null,
+                            tint = Color.Black
+                        )
+                    },
+                    text = {
+                        Text("Настройки")
+                    }
+                )
+
                 DropdownMenuItem(
                     onClick = {
                         onImportOpmlClick()

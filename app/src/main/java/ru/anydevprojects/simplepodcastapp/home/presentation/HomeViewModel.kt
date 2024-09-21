@@ -175,6 +175,7 @@ class HomeViewModel(
 
             HomeIntent.OnDismissMore -> dismissMoreMenu()
             HomeIntent.OnMoreClick -> showMoreMenu()
+            HomeIntent.OnSettingsClick -> openSettings()
             HomeIntent.OnExportOpmlClick -> exportOpml()
             HomeIntent.OnImportOpmlClick -> importOpml()
             is HomeIntent.SelectedImportFile -> startImportDataFromFile(intent.uri)
@@ -236,6 +237,10 @@ class HomeViewModel(
                 )
             )
         )
+    }
+
+    private fun openSettings() {
+        emitEvent(HomeEvent.OpenSettings)
     }
 
     private fun dismissMoreMenu() {

@@ -18,4 +18,5 @@ sealed interface HomeEvent : ViewEvent {
 
     data object SelectImportFile : HomeEvent
     data object SelectFolderForExportFile : HomeEvent
+    data object OpenSettings : HomeEvent
 }

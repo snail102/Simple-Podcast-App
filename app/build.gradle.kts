@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.searilization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.google.services)
 }
 
 fun loadKeystoreProperties(): Properties {
@@ -37,6 +38,7 @@ android {
 
         buildConfigField("String", "API_KEY", "\"${keystoreProperties["API_KEY"]}\"")
         buildConfigField("String", "SECRET_KEY", "\"${keystoreProperties["SECRET_KEY"]}\"")
+        buildConfigField("String", "WEB_CLIENT_ID", "\"${keystoreProperties["WEB_CLIENT_ID"]}\"")
     }
 
     buildTypes {
@@ -46,6 +48,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -117,4 +120,9 @@ dependencies {
     implementation(libs.lottie.compose)
     implementation(libs.xmlutil.core)
     implementation(libs.xmlutil.serialization)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.credentials.play.services.auth)
+    implementation(libs.credentials)
+    implementation(libs.googleid)
+    implementation(libs.firebase.messaging)
 }

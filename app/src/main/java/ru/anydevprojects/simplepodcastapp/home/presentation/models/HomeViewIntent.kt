@@ -12,6 +12,7 @@ sealed interface HomeIntent : ViewIntent {
     data object OnChangePayingCurrentMediaBtnClick : HomeIntent
     data object OnMoreClick : HomeIntent
     data object OnDismissMore : HomeIntent
+    data object OnSettingsClick : HomeIntent
     data object OnImportOpmlClick : HomeIntent
     data object OnExportOpmlClick : HomeIntent
 

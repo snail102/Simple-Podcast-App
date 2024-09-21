@@ -1,0 +1,4 @@
+package ru.anydevprojects.simplepodcastapp.settings.notifyNewEpisodesSettings.presentation
+
+class NotifyNewEpisodesSettingsViewModel {
+}

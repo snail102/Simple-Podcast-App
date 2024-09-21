@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "615543804335",
+    "project_id": "simple-podcast-app",
+    "storage_bucket": "simple-podcast-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:615543804335:android:d790bc17b00f3a00595f5a",
+        "android_client_info": {
+          "package_name": "ru.anydevprojects.simplepodcastapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "615543804335-dlhkbt77ughtfait92jeg5vo2decp8af.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ru.anydevprojects.simplepodcastapp",
+            "certificate_hash": "d1328f08813d9937a96cc5961c776939355088a3"
+          }
+        },
+        {
+          "client_id": "615543804335-vq3knb7e7951ve78ni8k0a3sd1ceskkg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDM0vs6kUdhxFb-fEzkQU5ilEhn4oZxIMU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "615543804335-ee0gnshftffdua0p32sa82h78qrim4rq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
