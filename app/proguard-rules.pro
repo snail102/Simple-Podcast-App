@@ -23,3 +23,10 @@
 -keep class androidx.credentials.playservices.** {
   *;
 }
+
+-keep class * {
+ @kotlinx.serialization.SerialName <fields>;
+}
+
+-dontwarn java.lang.management.ManagementFactory
+-dontwarn java.lang.management.RuntimeMXBean
