@@ -14,7 +14,7 @@ class HomeRepositoryImpl(
 ) : HomeRepository {
     override suspend fun getPodcastFeedsByQuery(query: String): Result<List<PodcastFeedSearched>> =
         kotlin.runCatching {
-            val searchPodcastFeedResponse = httpClient.get("search/byterm") {
+            val searchPodcastFeedResponse = httpClient.get("search") {
                 parameter("q", query)
             }.body<SearchPodcastFeedResponse>()
 

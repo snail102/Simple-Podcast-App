@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.protobuf)
 }
 
 fun loadKeystoreProperties(): Properties {
@@ -69,6 +70,24 @@ android {
     }
 }
 
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.24.1"
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                register("java") {
+                    option("lite")
+                }
+                register("kotlin") {
+                    option("lite")
+                }
+            }
+        }
+    }
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -92,6 +111,7 @@ dependencies {
 
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.compose)
+//    implementation(libs.koin.viewmodel)
 
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.auth)
@@ -126,4 +146,8 @@ dependencies {
     implementation(libs.credentials)
     implementation(libs.googleid)
     implementation(libs.firebase.messaging)
+    implementation(libs.datastore.preferences)
+    implementation(libs.datastore.proto)
+    implementation(libs.protobuf.kotlin.lite)
+    implementation(libs.splashscreen)
 }

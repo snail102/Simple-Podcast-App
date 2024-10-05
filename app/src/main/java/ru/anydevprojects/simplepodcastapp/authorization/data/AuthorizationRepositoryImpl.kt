@@ -10,10 +10,17 @@ import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import ru.anydevprojects.simplepodcastapp.authorization.data.models.SignIn
+import ru.anydevprojects.simplepodcastapp.authorization.data.models.SignInResponse
 import ru.anydevprojects.simplepodcastapp.authorization.domain.AuthorizationRepository
 import ru.anydevprojects.simplepodcastapp.core.CredentialsProvider
 
 class AuthorizationRepositoryImpl(
+    private val httpClient: HttpClient,
     private val applicationContext: Context
 ) : AuthorizationRepository {
     override suspend fun signInByGoogle() {
@@ -39,7 +46,7 @@ class AuthorizationRepositoryImpl(
         }
     }
 
-    fun handleSignIn(result: GetCredentialResponse) {
+    private suspend fun handleSignIn(result: GetCredentialResponse) {
         // Handle the successfully returned credential.
         when (val credential = result.credential) {
             is CustomCredential -> {
@@ -49,6 +56,16 @@ class AuthorizationRepositoryImpl(
                         // authenticate on your server.
                         val googleIdTokenCredential = GoogleIdTokenCredential
                             .createFrom(credential.data)
+                        val googleToken = googleIdTokenCredential.idToken
+
+                        val response = httpClient.post("sign_in") {
+                            setBody(
+                                SignIn(
+                                    token = googleToken
+                                )
+                            )
+                        }.body<SignInResponse>()
+
                         Log.d("auth", "token google id ${googleIdTokenCredential.idToken}")
                         Log.d("auth", "givenName ${googleIdTokenCredential.givenName}")
                         Log.d("auth", "familyName ${googleIdTokenCredential.familyName}")

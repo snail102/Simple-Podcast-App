@@ -17,7 +17,7 @@ interface PodcastFeedRepository {
 
     suspend fun getLocalPodcastFeedByUrl(url: String): PodcastFeed?
 
-    suspend fun subscribeOnPodcast(podcastId: Long)
+    suspend fun subscribeOnPodcast(podcastId: Long): Result<Unit>
 
-    suspend fun unsubscribeOnPodcast(podcastId: Long)
+    suspend fun unsubscribeOnPodcast(podcastId: Long): Result<Unit>
 }

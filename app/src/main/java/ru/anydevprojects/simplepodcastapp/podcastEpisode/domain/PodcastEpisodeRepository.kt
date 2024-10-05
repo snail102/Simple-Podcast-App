@@ -13,7 +13,7 @@ interface PodcastEpisodeRepository {
 
     suspend fun getEpisodesByPodcastId(podcastId: Long): Result<List<PodcastEpisode>>
 
-    suspend fun getEpisodesByPodcastIds(podcastIds: List<Long>): Result<List<PodcastEpisode>>
+    suspend fun getEpisodesFromSubscriptions(): Result<List<PodcastEpisode>>
 
     suspend fun getEpisodeById(id: Long): Result<PodcastEpisode>
 }

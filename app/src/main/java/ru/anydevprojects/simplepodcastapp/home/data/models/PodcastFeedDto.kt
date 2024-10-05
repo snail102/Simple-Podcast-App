@@ -27,5 +27,8 @@ data class PodcastFeedDto(
     val author: String,
 
     @SerialName("episodeCount")
-    val episodeCount: Int
+    val episodeCount: Int,
+
+    @SerialName("isSubscribed")
+    val isSubscribed: Boolean
 )

@@ -7,11 +7,9 @@ import androidx.room.PrimaryKey
 data class PodcastFeedEntity(
     @PrimaryKey
     val id: Long,
-    val title: String,
     val url: String,
-    val link: String,
+    val title: String,
     val description: String,
     val image: String,
-    val author: String,
-    val episodeCount: Int
+    val author: String
 )

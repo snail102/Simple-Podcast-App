@@ -8,11 +8,9 @@ fun PodcastFeedDto.toDomain(subscribed: Boolean): PodcastFeed = PodcastFeed(
     id = this.id,
     title = this.title,
     url = this.url,
-    link = this.link,
     description = this.description,
     image = this.image,
     author = this.author,
-    episodeCount = this.episodeCount,
     subscribed = subscribed
 )
 

@@ -4,14 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreen
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreenNavigation
 import ru.anydevprojects.simplepodcastapp.home.presentation.HomeScreen
@@ -28,11 +29,18 @@ import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: MainViewModel by viewModels()
+    private val viewModel: MainViewModel by viewModel()
 
     @OptIn(ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        installSplashScreen().apply {
+            setKeepOnScreenCondition {
+                viewModel.stateInitialApp.value
+            }
+        }
+
         // startService(Intent(this, JetAudioService::class.java))
         // viewModel.getFCMToken()
         enableEdgeToEdge()
@@ -45,7 +53,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     NavHost(
                         navController = navController,
-                        startDestination = HomeScreenNavigation
+                        startDestination = viewModel.getStartDestination()
                     ) {
                         composable<AuthorizationScreenNavigation> {
                             AuthorizationScreen()

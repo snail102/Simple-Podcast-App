@@ -7,26 +7,22 @@ import ru.anydevprojects.simplepodcastapp.podcastFeed.data.models.PodcastFeedWit
 fun PodcastFeed.toEntity(): PodcastFeedEntity {
     return PodcastFeedEntity(
         id = this.id,
-        title = this.title,
         url = this.url,
-        link = this.link,
+        title = this.title,
         description = this.description,
         image = this.image,
-        author = this.author,
-        episodeCount = this.episodeCount
+        author = this.author
     )
 }
 
 fun PodcastFeedEntity.toDomain(subscribed: Boolean): PodcastFeed {
     return PodcastFeed(
         id = this.id,
-        title = this.title,
         url = this.url,
-        link = this.link,
+        title = this.title,
         description = this.description,
         image = this.image,
         author = this.author,
-        episodeCount = this.episodeCount,
         subscribed = subscribed
     )
 }
@@ -34,13 +30,11 @@ fun PodcastFeedEntity.toDomain(subscribed: Boolean): PodcastFeed {
 fun PodcastFeedWithSubscription.toDomain(): PodcastFeed {
     return PodcastFeed(
         id = this.podcastFeedEntity.id,
-        title = this.podcastFeedEntity.title,
         url = this.podcastFeedEntity.url,
-        link = this.podcastFeedEntity.link,
+        title = this.podcastFeedEntity.title,
         description = this.podcastFeedEntity.description,
         author = this.podcastFeedEntity.author,
         image = this.podcastFeedEntity.image,
-        episodeCount = this.podcastFeedEntity.episodeCount,
         subscribed = this.isSubscribed
     )
 }

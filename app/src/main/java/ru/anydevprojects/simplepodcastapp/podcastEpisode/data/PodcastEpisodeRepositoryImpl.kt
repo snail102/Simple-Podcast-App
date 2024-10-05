@@ -14,6 +14,7 @@ import ru.anydevprojects.simplepodcastapp.podcastEpisode.domain.PodcastEpisodeRe
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.domain.models.PodcastEpisode
 
 class PodcastEpisodeRepositoryImpl(
+    private val httpClientLogic: HttpClient,
     private val httpClient: HttpClient,
     private val podcastEpisodeDao: PodcastEpisodeDao
 ) : PodcastEpisodeRepository {
@@ -32,10 +33,19 @@ class PodcastEpisodeRepositoryImpl(
         return getEpisodes(requestId = podcastId.toString())
     }
 
-    override suspend fun getEpisodesByPodcastIds(
-        podcastIds: List<Long>
-    ): Result<List<PodcastEpisode>> {
-        return getEpisodes(requestId = podcastIds.joinToString(separator = ","))
+    override suspend fun getEpisodesFromSubscriptions(): Result<List<PodcastEpisode>> {
+        return kotlin.runCatching {
+            val podcastEpisodesResponse =
+                httpClientLogic.get("episodes_from_subscriptions").body<PodcastEpisodesResponse>()
+
+            val episodes = podcastEpisodesResponse.items.map {
+                it.toDomain()
+            }
+
+            podcastEpisodeDao.insert(episodes.map { it.toEntity() })
+
+            episodes
+        }
     }
 
     override suspend fun getEpisodeById(id: Long): Result<PodcastEpisode> {

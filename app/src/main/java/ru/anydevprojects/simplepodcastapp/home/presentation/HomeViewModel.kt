@@ -5,13 +5,11 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.annotation.OptIn
-import androidx.compose.runtime.getValue
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
-import androidx.room.util.copy
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -286,13 +284,13 @@ class HomeViewModel(
                 podcasts = it.map { podcastFeed -> podcastFeed.toPodcastSubscriptionUi() }
             )
             updateState()
-            loadEpisodesByIds(it.map { podcastFeed -> podcastFeed.id })
+            loadEpisodesByIds()
         }.launchIn(viewModelScope)
     }
 
-    private fun loadEpisodesByIds(ids: List<Long>) {
+    private fun loadEpisodesByIds() {
         viewModelScope.launch {
-            podcastEpisodeRepository.getEpisodesByPodcastIds(ids)
+            podcastEpisodeRepository.getEpisodesFromSubscriptions()
         }
     }
 
