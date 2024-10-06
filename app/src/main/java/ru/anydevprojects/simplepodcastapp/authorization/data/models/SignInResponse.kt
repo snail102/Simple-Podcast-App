@@ -2,6 +2,7 @@ package ru.anydevprojects.simplepodcastapp.authorization.data.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import ru.anydevprojects.simplepodcastapp.core.token.data.TokenDto
 
 @Serializable
 data class SignInResponse(

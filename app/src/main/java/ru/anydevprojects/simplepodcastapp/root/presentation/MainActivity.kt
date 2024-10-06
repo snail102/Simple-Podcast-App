@@ -6,12 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import nl.adaptivity.xmlutil.core.impl.multiplatform.name
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreen
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreenNavigation
@@ -23,9 +25,11 @@ import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.PodcastEpi
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.PodcastEpisodeScreenNavigation
 import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.PodcastFeedScreen
 import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.PodcastFeedScreenNavigation
+import ru.anydevprojects.simplepodcastapp.root.presentation.models.EventMain
 import ru.anydevprojects.simplepodcastapp.settings.mainSettings.presentation.SettingsScreen
 import ru.anydevprojects.simplepodcastapp.settings.mainSettings.presentation.SettingsScreenNavigation
 import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
+import ru.anydevprojects.simplepodcastapp.utils.rememberFlowWithLifecycle
 
 class MainActivity : ComponentActivity() {
 
@@ -44,8 +48,23 @@ class MainActivity : ComponentActivity() {
         // startService(Intent(this, JetAudioService::class.java))
         // viewModel.getFCMToken()
         enableEdgeToEdge()
+
         setContent {
             val navController = rememberNavController()
+
+            val event = rememberFlowWithLifecycle(viewModel.event)
+
+            LaunchedEffect(event) {
+                event.collect { event ->
+                    when (event) {
+                        EventMain.NavigateToAuthorization -> {
+                            if (navController.currentBackStackEntry?.destination?.route != AuthorizationScreenNavigation::class.name) {
+                                navController.navigate(AuthorizationScreenNavigation)
+                            }
+                        }
+                    }
+                }
+            }
 
             SimplePodcastAppTheme {
                 SharedTransitionLayout(

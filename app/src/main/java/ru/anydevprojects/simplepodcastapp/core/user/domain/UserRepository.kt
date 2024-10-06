@@ -12,4 +12,8 @@ interface UserRepository {
     suspend fun isAuthorized(): Boolean
 
     suspend fun getUser(): User?
+
+    suspend fun updateUser(user: User)
+
+    suspend fun removeUser()
 }

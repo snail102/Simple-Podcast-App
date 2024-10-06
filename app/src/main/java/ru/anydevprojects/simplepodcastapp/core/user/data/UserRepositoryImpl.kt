@@ -19,4 +19,11 @@ class UserRepositoryImpl(
     override suspend fun isAuthorized(): Boolean = dataStore.getUser() != null
 
     override suspend fun getUser(): User? = dataStore.getUser()
+    override suspend fun updateUser(user: User) {
+        dataStore.updateUser(user = user)
+    }
+
+    override suspend fun removeUser() {
+        dataStore.removeUser()
+    }
 }

@@ -29,7 +29,10 @@ class AuthorizationViewModel(
 
     private fun signIn() {
         viewModelScope.launch {
-            authorizationRepository.signInByGoogle()
+            authorizationRepository.signInByGoogle().onFailure {
+                emitEvent(AuthorizationEvent.ErrorAuth)
+            }
+
             // emitEvent(AuthorizationEvent.StartSignIn(signInIntentSender))
         }
     }

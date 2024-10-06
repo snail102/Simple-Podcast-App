@@ -19,7 +19,7 @@ import java.util.Formatter
 import kotlinx.serialization.json.Json
 import ru.anydevprojects.simplepodcastapp.BuildConfig
 import ru.anydevprojects.simplepodcastapp.core.CredentialsProvider
-import ru.anydevprojects.simplepodcastapp.core.dataStore.DataStore
+import ru.anydevprojects.simplepodcastapp.core.token.domain.TokenRepository
 
 private const val BASE_URL = "https://api.podcastindex.org/api/1.0/"
 private const val BASE_LOGIC_SERVER_URL = "http://127.0.0.1:8080/"
@@ -51,31 +51,32 @@ internal fun getNetworkClient(): HttpClient = HttpClient(CIO) {
     }
 }
 
-internal fun getNetworkClientForLogicServer(dataStore: DataStore): HttpClient = HttpClient(CIO) {
-    install(ContentNegotiation) {
-        json(
-            Json {
-                prettyPrint = true
-                isLenient = true
-                ignoreUnknownKeys = true
-            }
-        )
-    }
-    install(Logging) {
-        logger = Logger.DEFAULT
-        level = LogLevel.ALL
-    }
-    defaultRequest {
-        url(BASE_LOGIC_SERVER_URL)
-        contentType(ContentType.Application.Json)
-        headers {
-            append("Authorization", authHeaderForLogicServer(dataStore.accessToken))
+internal fun getNetworkClientForLogicServer(tokenRepository: TokenRepository): HttpClient =
+    HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(
+                Json {
+                    prettyPrint = true
+                    isLenient = true
+                    ignoreUnknownKeys = true
+                }
+            )
         }
-    }
-    install(Auth) {
-        bearer {
-            refreshTokens {
-                runCatching {
+        install(Logging) {
+            logger = Logger.DEFAULT
+            level = LogLevel.ALL
+        }
+        defaultRequest {
+            url(BASE_LOGIC_SERVER_URL)
+            contentType(ContentType.Application.Json)
+            headers {
+                append("Authorization", authHeaderForLogicServer(tokenRepository.accessToken))
+            }
+        }
+        install(Auth) {
+            bearer {
+                refreshTokens {
+                    runCatching {
 //                        val tokenResponse = client.post {
 //                            markAsRefreshTokenRequest()
 //                            contentType(ContentType.Application.Json)
@@ -94,14 +95,14 @@ internal fun getNetworkClientForLogicServer(dataStore: DataStore): HttpClient = 
 //                            accessToken = token.accessToken,
 //                            refreshToken = token.refreshToken
 //                        )
-                    TODO("need create refresh token")
-                }.onFailure {
-                    dataStore.removeTokens()
-                }.getOrNull()
+                        TODO("need create refresh token")
+                    }.onFailure {
+                        tokenRepository.removeTokens()
+                    }.getOrNull()
+                }
             }
         }
     }
-}
 
 private fun authHeaderForLogicServer(token: String): String {
     return "Bearer $token"

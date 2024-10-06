@@ -7,8 +7,10 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import ru.anydevprojects.simplepodcastapp.core.dataStore.models.UserPrefsSerializer
+import ru.anydevprojects.simplepodcastapp.core.token.domain.models.Token
 import ru.anydevprojects.simplepodcastapp.core.user.domain.models.User
 
 class DataStoreImpl(
@@ -25,16 +27,6 @@ class DataStoreImpl(
     private val accessTokenKey = stringPreferencesKey(ACCESS_TOKEN_KEY)
     private val refreshTokenKey = stringPreferencesKey(REFRESH_TOKEN_KEY)
 
-    private var _accessToken: String = ""
-    private var _refreshToken: String = ""
-
-    init {
-        context.dataStore.data.map { preferences ->
-            _accessToken = preferences[accessTokenKey].orEmpty()
-            _refreshToken = preferences[refreshTokenKey].orEmpty()
-        }
-    }
-
     override val userFlow: Flow<User?>
         get() = context.userPrefsDataStore.data
             .map { userPrefs ->
@@ -46,11 +38,19 @@ class DataStoreImpl(
                     pictureUrl = userPrefs.pictureUrl
                 )
             }
-
-    override val accessToken: String
-        get() = _accessToken
-    override val refreshToken: String
-        get() = _refreshToken
+    override val tokenFlow: Flow<Token?>
+        get() = context.dataStore.data.map { preferences ->
+            val accessToken = preferences[accessTokenKey]
+            val refreshToken = preferences[refreshTokenKey]
+            if (accessToken.isNullOrEmpty() || refreshToken.isNullOrEmpty()) {
+                null
+            } else {
+                Token(
+                    access = accessToken,
+                    refresh = refreshToken
+                )
+            }
+        }
 
     override suspend fun getUser(): User? {
         val userPrefs = context.userPrefsDataStore.data.first()
@@ -68,20 +68,42 @@ class DataStoreImpl(
         )
     }
 
-    override suspend fun updateTokens(accessToken: String, refreshToken: String) {
-        _accessToken = accessToken
-        _refreshToken = refreshToken
+    override suspend fun getToken(): Token? {
+        val preferences = context.dataStore.data.firstOrNull()
+        val accessToken = preferences?.get(accessTokenKey)
+        val refreshToken = preferences?.get(refreshTokenKey)
 
+        return if (accessToken.isNullOrEmpty() || refreshToken.isNullOrEmpty()) {
+            null
+        } else {
+            Token(
+                access = accessToken,
+                refresh = refreshToken
+            )
+        }
+    }
+
+    override suspend fun updateTokens(accessToken: String, refreshToken: String) {
         context.dataStore.edit { settings ->
             settings[accessTokenKey] = accessToken
             settings[refreshTokenKey] = refreshToken
         }
     }
 
-    override suspend fun removeTokens() {
-        _accessToken = ""
-        _refreshToken = ""
+    override suspend fun updateUser(user: User) {
+        context.userPrefsDataStore.updateData { currentPrefs ->
+            currentPrefs.toBuilder().run {
+                id = user.id
+                name = user.name
+                familyName = user.familyName
+                email = user.email
+                pictureUrl = user.pictureUrl
+                build()
+            }
+        }
+    }
 
+    override suspend fun removeTokens() {
         context.dataStore.edit { settings ->
             settings[accessTokenKey] = ""
             settings[refreshTokenKey] = ""

@@ -16,6 +16,8 @@ val authorizationModule = module {
             httpClient = get(
                 qualifier = networkClientLogicServerQualifier
             ),
+            get(),
+            get(),
             get()
         )
     }

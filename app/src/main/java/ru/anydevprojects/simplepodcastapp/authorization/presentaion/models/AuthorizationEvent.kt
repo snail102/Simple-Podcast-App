@@ -7,4 +7,6 @@ sealed interface AuthorizationEvent : ViewEvent {
     data class StartSignIn(
         val intentSender: IntentSender?
     ) : AuthorizationEvent
+
+    data object ErrorAuth : AuthorizationEvent
 }

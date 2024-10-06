@@ -6,7 +6,6 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
-import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -16,33 +15,37 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import ru.anydevprojects.simplepodcastapp.authorization.data.models.SignIn
 import ru.anydevprojects.simplepodcastapp.authorization.data.models.SignInResponse
+import ru.anydevprojects.simplepodcastapp.authorization.data.models.toDomain
 import ru.anydevprojects.simplepodcastapp.authorization.domain.AuthorizationRepository
 import ru.anydevprojects.simplepodcastapp.core.CredentialsProvider
+import ru.anydevprojects.simplepodcastapp.core.token.data.toDomain
+import ru.anydevprojects.simplepodcastapp.core.token.domain.TokenRepository
+import ru.anydevprojects.simplepodcastapp.core.user.domain.UserRepository
 
 class AuthorizationRepositoryImpl(
     private val httpClient: HttpClient,
-    private val applicationContext: Context
+    private val applicationContext: Context,
+    private val userRepository: UserRepository,
+    private val tokenRepository: TokenRepository
 ) : AuthorizationRepository {
-    override suspend fun signInByGoogle() {
-        val credentialManager = CredentialManager.create(applicationContext)
+    override suspend fun signInByGoogle(): Result<Unit> {
+        return runCatching {
+            val credentialManager = CredentialManager.create(applicationContext)
 
-        Log.d("auth", "id ${CredentialsProvider.getWebClientId()}")
-        val signInWithGoogleOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
-            .setServerClientId(CredentialsProvider.getWebClientId())
-            .build()
+            Log.d("auth", "id ${CredentialsProvider.getWebClientId()}")
+            val signInWithGoogleOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
+                .setServerClientId(CredentialsProvider.getWebClientId())
+                .build()
 
-        val request: GetCredentialRequest = GetCredentialRequest.Builder()
-            .addCredentialOption(signInWithGoogleOption)
-            .build()
+            val request: GetCredentialRequest = GetCredentialRequest.Builder()
+                .addCredentialOption(signInWithGoogleOption)
+                .build()
 
-        try {
             val result = credentialManager.getCredential(
                 request = request,
                 context = applicationContext
             )
             handleSignIn(result)
-        } catch (e: GetCredentialException) {
-            e.printStackTrace()
         }
     }
 
@@ -58,13 +61,7 @@ class AuthorizationRepositoryImpl(
                             .createFrom(credential.data)
                         val googleToken = googleIdTokenCredential.idToken
 
-                        val response = httpClient.post("sign_in") {
-                            setBody(
-                                SignIn(
-                                    token = googleToken
-                                )
-                            )
-                        }.body<SignInResponse>()
+                        authOnServerLogic(googleToken)
 
                         Log.d("auth", "token google id ${googleIdTokenCredential.idToken}")
                         Log.d("auth", "givenName ${googleIdTokenCredential.givenName}")
@@ -89,5 +86,20 @@ class AuthorizationRepositoryImpl(
                 Log.e("auth", "Unexpected type of credential")
             }
         }
+    }
+
+    private suspend fun authOnServerLogic(googleToken: String) {
+        val response = httpClient.post("sign_in") {
+            setBody(
+                SignIn(
+                    token = googleToken
+                )
+            )
+        }.body<SignInResponse>()
+
+        tokenRepository.updateTokens(
+            token = response.tokens.toDomain()
+        )
+        userRepository.updateUser(user = response.user.toDomain())
     }
 }
