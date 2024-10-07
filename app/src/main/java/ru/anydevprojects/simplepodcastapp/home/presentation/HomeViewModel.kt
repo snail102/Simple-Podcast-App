@@ -52,8 +52,13 @@ class HomeViewModel(
     private var episodes: List<PodcastEpisodeUi> = emptyList()
     private var podcastsSubscriptions: PodcastsSubscriptions = PodcastsSubscriptions()
 
-    init {
+    override fun onStart() {
+        super.onStart()
+        fetchSubscriptionsPodcasts()
+        loadEpisodesByIds()
+    }
 
+    init {
         viewModelScope.launch {
             jetAudioServiceHandler.audioState.collectLatest { mediaState ->
                 when (mediaState) {
@@ -213,7 +218,11 @@ class HomeViewModel(
             if (uri == null) {
                 return@launch
             }
+            updateState(
+                HomeState.ImportProcessing
+            )
             importPodcastsRepository.import(uri.toString())
+            updateState(lastContentState)
         }
     }
 
@@ -295,8 +304,13 @@ class HomeViewModel(
                 podcasts = it.map { podcastFeed -> podcastFeed.toPodcastSubscriptionUi() }
             )
             updateState()
-            loadEpisodesByIds()
         }.launchIn(viewModelScope)
+    }
+
+    private fun fetchSubscriptionsPodcasts() {
+        viewModelScope.launch {
+            podcastFeedRepository.fetchSubscriptionsPodcasts()
+        }
     }
 
     private fun loadEpisodesByIds() {

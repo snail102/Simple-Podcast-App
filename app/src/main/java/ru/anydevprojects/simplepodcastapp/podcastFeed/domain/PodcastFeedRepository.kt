@@ -9,6 +9,10 @@ interface PodcastFeedRepository {
 
     fun getSubscriptionPodcasts(): Flow<List<PodcastFeed>>
 
+    suspend fun fetchSubscriptionsPodcasts(): Result<Unit>
+
+    suspend fun addSubscriptionsPodcasts(ids: List<Long>): Result<Unit>
+
     suspend fun getAllSubscriptionPodcasts(): List<PodcastFeed>
 
     suspend fun getPodcastFeedById(id: Long): Result<PodcastFeed>
@@ -20,4 +24,6 @@ interface PodcastFeedRepository {
     suspend fun subscribeOnPodcast(podcastId: Long): Result<Unit>
 
     suspend fun unsubscribeOnPodcast(podcastId: Long): Result<Unit>
+
+    suspend fun importPodcasts(podcastUrls: List<String>): Result<Unit>
 }

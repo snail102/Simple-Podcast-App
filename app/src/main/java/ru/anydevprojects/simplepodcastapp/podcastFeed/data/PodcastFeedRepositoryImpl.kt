@@ -13,10 +13,13 @@ import ru.anydevprojects.simplepodcastapp.home.data.mappers.toDomain
 import ru.anydevprojects.simplepodcastapp.home.domain.model.PodcastFeed
 import ru.anydevprojects.simplepodcastapp.podcastFeed.data.mappers.toDomain
 import ru.anydevprojects.simplepodcastapp.podcastFeed.data.mappers.toEntity
+import ru.anydevprojects.simplepodcastapp.podcastFeed.data.models.ImportPodcastsRequest
 import ru.anydevprojects.simplepodcastapp.podcastFeed.data.models.PodcastFeedResponse
 import ru.anydevprojects.simplepodcastapp.podcastFeed.data.models.SubscribeRequest
+import ru.anydevprojects.simplepodcastapp.podcastFeed.data.models.SubscriptionPodcastDto
 import ru.anydevprojects.simplepodcastapp.podcastFeed.data.models.SubscriptionPodcastFeedEntity
 import ru.anydevprojects.simplepodcastapp.podcastFeed.data.models.UnsubscribeRequest
+import ru.anydevprojects.simplepodcastapp.podcastFeed.data.models.toEntity
 import ru.anydevprojects.simplepodcastapp.podcastFeed.domain.PodcastFeedRepository
 
 class PodcastFeedRepositoryImpl(
@@ -29,11 +32,28 @@ class PodcastFeedRepositoryImpl(
     override fun podcastFeedByIdFlow(id: Long): Flow<PodcastFeed?> =
         podcastFeedDao.getPodcastWithSubscription(id).map { it?.toDomain() }
 
-    // TODO добавить в PodcastFeedEntity поле isSubscribed
     override fun getSubscriptionPodcasts(): Flow<List<PodcastFeed>> =
         podcastFeedDao.getSubscriptionPodcasts().map { it.map { it.toDomain(true) } }
 
-    // TODO получать только флоу из бд, а для обновления дергать запрос на сервак
+    override suspend fun fetchSubscriptionsPodcasts(): Result<Unit> {
+        return kotlin.runCatching {
+            httpClientLogic.get("subscriptions") {
+            }.body<List<SubscriptionPodcastDto>>()
+        }.mapCatching { subscriptionsPodcasts ->
+            subscriptionsPodcasts.forEach { podcast ->
+                podcastFeedDao.insert(podcast.toEntity())
+            }
+            addSubscriptionsPodcasts(subscriptionsPodcasts.map { it.id })
+        }
+    }
+
+    override suspend fun addSubscriptionsPodcasts(ids: List<Long>): Result<Unit> {
+        return kotlin.runCatching {
+            val subscriptions = ids.map { SubscriptionPodcastFeedEntity(podcastId = it) }
+            subscriptionPodcastFeedDao.insertAll(subscriptions)
+        }
+    }
+
     override suspend fun getAllSubscriptionPodcasts(): List<PodcastFeed> {
         return podcastFeedDao.getAllSubscriptionPodcasts().map { it.toDomain(subscribed = true) }
     }
@@ -100,6 +120,20 @@ class PodcastFeedRepositoryImpl(
                 subscriptionPodcastFeedDao.deleteByPodcastId(podcastId = podcastId)
             }
             Unit
+        }
+    }
+
+    override suspend fun importPodcasts(podcastUrls: List<String>): Result<Unit> {
+        return kotlin.runCatching {
+            httpClientLogic.post("import") {
+                setBody(
+                    ImportPodcastsRequest(
+                        podcastUrls = podcastUrls
+                    )
+                )
+            }
+        }.mapCatching {
+            fetchSubscriptionsPodcasts()
         }
     }
 }
