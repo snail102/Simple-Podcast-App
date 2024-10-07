@@ -8,12 +8,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreenNavigation
 import ru.anydevprojects.simplepodcastapp.core.navigation.Screen
@@ -27,23 +24,26 @@ class MainViewModel(
     private val tokenRepository: TokenRepository
 ) : ViewModel() {
 
-    private var startDestination: Screen = AuthorizationScreenNavigation
+    private val _startDestination: MutableStateFlow<Screen?> = MutableStateFlow(null)
+    val startDestination = _startDestination.asStateFlow()
 
-    private val _stateInitialApp: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val stateInitialApp = _stateInitialApp
-        .onStart {
+    private val _stateInitialApp: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    val stateInitialApp = _stateInitialApp.asStateFlow()
+
+    init {
+        viewModelScope.launch {
             val isAuthUser = userRepository.isAuthorized()
             val hasToken = tokenRepository.hasToken()
             if (isAuthUser && hasToken) {
-                startDestination = HomeScreenNavigation
+                _startDestination.value = HomeScreenNavigation
+                Log.d("test1", startDestination.toString())
+            } else {
+                _startDestination.value = AuthorizationScreenNavigation
             }
             _stateAuth.value = isAuthUser
+            _stateInitialApp.value = false
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Lazily,
-            initialValue = false
-        )
+    }
 
     private val _stateAuth: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val stateAuth = _stateAuth.asStateFlow()
@@ -53,10 +53,6 @@ class MainViewModel(
 
     init {
         authorizationStatusObserver()
-    }
-
-    fun getStartDestination(): Screen {
-        return startDestination
     }
 
     fun getFCMToken() {
@@ -75,9 +71,21 @@ class MainViewModel(
     }
 
     private fun authorizationStatusObserver() {
-        userRepository.currentUserFlow.combine(tokenRepository.tokenFlow) { user, token ->
-            if (user == null && token == null) {
-                _event.send(EventMain.NavigateToAuthorization)
+        viewModelScope.launch {
+            val isAuthorized = userRepository.isAuthorized()
+            userRepository.isAuthorizedFlow.scan(
+                isAuthorized to isAuthorized
+            ) { previousPair, current ->
+                val previousValue = previousPair.second
+                previousPair.second to current
+            }.collect { (previous, current) ->
+                if (previous != current) {
+                    if (current) {
+                        _event.send(EventMain.NavigateToHome)
+                    } else {
+                        _event.send(EventMain.NavigateToAuthorization)
+                    }
+                }
             }
         }
     }

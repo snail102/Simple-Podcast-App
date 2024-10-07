@@ -237,7 +237,18 @@ class HomeViewModel(
         )
     }
 
+    private fun hideMoreMenu() {
+        updateState(
+            lastContentState.copy(
+                searchContent = lastContentState.searchContent.copy(
+                    expandedMoreMenu = false
+                )
+            )
+        )
+    }
+
     private fun openSettings() {
+        hideMoreMenu()
         emitEvent(HomeEvent.OpenSettings)
     }
 

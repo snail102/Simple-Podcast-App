@@ -23,6 +23,7 @@ import ru.anydevprojects.simplepodcastapp.core.token.domain.TokenRepository
 
 private const val BASE_URL = "https://api.podcastindex.org/api/1.0/"
 private const val BASE_LOGIC_SERVER_URL = "http://127.0.0.1:8080/"
+private const val BASE_LOGIC_SERVER_URL_LOCAL = "http://192.168.31.32:8080/"
 
 internal fun getNetworkClient(): HttpClient = HttpClient(CIO) {
     install(ContentNegotiation) {
@@ -67,7 +68,7 @@ internal fun getNetworkClientForLogicServer(tokenRepository: TokenRepository): H
             level = LogLevel.ALL
         }
         defaultRequest {
-            url(BASE_LOGIC_SERVER_URL)
+            url(BASE_LOGIC_SERVER_URL_LOCAL)
             contentType(ContentType.Application.Json)
             headers {
                 append("Authorization", authHeaderForLogicServer(tokenRepository.accessToken))

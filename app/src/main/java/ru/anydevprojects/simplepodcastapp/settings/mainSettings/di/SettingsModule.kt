@@ -5,5 +5,5 @@ import org.koin.dsl.module
 import ru.anydevprojects.simplepodcastapp.settings.mainSettings.presentation.SettingsViewModel
 
 val settingsModule = module {
-    viewModel { SettingsViewModel() }
+    viewModel { SettingsViewModel(get(), get()) }
 }

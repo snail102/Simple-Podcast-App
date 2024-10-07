@@ -1,14 +1,17 @@
 package ru.anydevprojects.simplepodcastapp.root.presentation
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -37,29 +40,51 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
         installSplashScreen().apply {
             setKeepOnScreenCondition {
                 viewModel.stateInitialApp.value
             }
         }
 
+        super.onCreate(savedInstanceState)
+
+        Log.d("test", "onCreate")
+
         // startService(Intent(this, JetAudioService::class.java))
         // viewModel.getFCMToken()
         enableEdgeToEdge()
-
+        Log.d("test", "before setContent")
         setContent {
             val navController = rememberNavController()
 
             val event = rememberFlowWithLifecycle(viewModel.event)
+
+            val stateStartDestination by viewModel.startDestination.collectAsStateWithLifecycle()
 
             LaunchedEffect(event) {
                 event.collect { event ->
                     when (event) {
                         EventMain.NavigateToAuthorization -> {
                             if (navController.currentBackStackEntry?.destination?.route != AuthorizationScreenNavigation::class.name) {
-                                navController.navigate(AuthorizationScreenNavigation)
+                                navController.navigate(AuthorizationScreenNavigation) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = true
+                                    }
+                                    launchSingleTop = true
+                                }
+                            }
+                        }
+
+                        EventMain.NavigateToHome -> {
+                            if (navController.currentBackStackEntry?.destination?.route == AuthorizationScreenNavigation::class.name) {
+                                navController.navigate(
+                                    HomeScreenNavigation
+                                ) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = true
+                                    }
+                                    launchSingleTop = true
+                                }
                             }
                         }
                     }
@@ -70,80 +95,82 @@ class MainActivity : ComponentActivity() {
                 SharedTransitionLayout(
                     modifier = Modifier
                 ) {
-                    NavHost(
-                        navController = navController,
-                        startDestination = viewModel.getStartDestination()
-                    ) {
-                        composable<AuthorizationScreenNavigation> {
-                            AuthorizationScreen()
-                        }
+                    stateStartDestination?.let {
+                        NavHost(
+                            navController = navController,
+                            startDestination = it
+                        ) {
+                            composable<AuthorizationScreenNavigation> {
+                                AuthorizationScreen()
+                            }
 
-                        composable<HomeScreenNavigation> {
-                            HomeScreen(
-                                animatedVisibilityScope = this@composable,
-                                onPodcastClick = { id ->
-                                    navController.navigate(
-                                        PodcastFeedScreenNavigation(podcastId = id)
-                                    )
-                                },
-                                onEpisodeClick = { episodeId ->
-                                    navController.navigate(
-                                        PodcastEpisodeScreenNavigation(
-                                            episodeId = episodeId
+                            composable<HomeScreenNavigation> {
+                                HomeScreen(
+                                    animatedVisibilityScope = this@composable,
+                                    onPodcastClick = { id ->
+                                        navController.navigate(
+                                            PodcastFeedScreenNavigation(podcastId = id)
                                         )
-                                    )
-                                },
-                                onPlaybackQueueClick = {
-                                    navController.navigate(
-                                        PlaybackQueueScreenNavigation
-                                    )
-                                },
-                                openSettings = {
-                                    navController.navigate(
-                                        SettingsScreenNavigation
-                                    )
-                                }
-                            )
-                        }
-                        composable<PodcastFeedScreenNavigation> {
-                            val args = it.toRoute<PodcastFeedScreenNavigation>()
-                            PodcastFeedScreen(
-                                podcastId = args.podcastId,
-                                onNavigateToEpisodeDetail = {
-                                    navController.navigate(
-                                        PodcastEpisodeScreenNavigation(episodeId = it)
-                                    )
-                                },
-                                onBackClick = {
-                                    navController.popBackStack()
-                                }
-                            )
-                        }
+                                    },
+                                    onEpisodeClick = { episodeId ->
+                                        navController.navigate(
+                                            PodcastEpisodeScreenNavigation(
+                                                episodeId = episodeId
+                                            )
+                                        )
+                                    },
+                                    onPlaybackQueueClick = {
+                                        navController.navigate(
+                                            PlaybackQueueScreenNavigation
+                                        )
+                                    },
+                                    openSettings = {
+                                        navController.navigate(
+                                            SettingsScreenNavigation
+                                        )
+                                    }
+                                )
+                            }
+                            composable<PodcastFeedScreenNavigation> {
+                                val args = it.toRoute<PodcastFeedScreenNavigation>()
+                                PodcastFeedScreen(
+                                    podcastId = args.podcastId,
+                                    onNavigateToEpisodeDetail = {
+                                        navController.navigate(
+                                            PodcastEpisodeScreenNavigation(episodeId = it)
+                                        )
+                                    },
+                                    onBackClick = {
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
 
-                        composable<PodcastEpisodeScreenNavigation> {
-                            val args = it.toRoute<PodcastEpisodeScreenNavigation>()
-                            PodcastEpisodeScreen(
-                                episodeId = args.episodeId,
-                                onBackClick = {
-                                    navController.popBackStack()
-                                }
-                            )
-                        }
+                            composable<PodcastEpisodeScreenNavigation> {
+                                val args = it.toRoute<PodcastEpisodeScreenNavigation>()
+                                PodcastEpisodeScreen(
+                                    episodeId = args.episodeId,
+                                    onBackClick = {
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
 
-                        composable<PlaybackQueueScreenNavigation> {
-                            PlaybackQueueScreen(
-                                onBackClick = {
-                                    navController.popBackStack()
-                                }
-                            )
-                        }
+                            composable<PlaybackQueueScreenNavigation> {
+                                PlaybackQueueScreen(
+                                    onBackClick = {
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
 
-                        composable<SettingsScreenNavigation> {
-                            SettingsScreen(
-                                onBackClick = {
-                                    navController.popBackStack()
-                                }
-                            )
+                            composable<SettingsScreenNavigation> {
+                                SettingsScreen(
+                                    onBackClick = {
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
                         }
                     }
                 }

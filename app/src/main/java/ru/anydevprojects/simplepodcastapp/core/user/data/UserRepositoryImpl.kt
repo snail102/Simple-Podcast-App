@@ -14,7 +14,7 @@ class UserRepositoryImpl(
         get() = dataStore.userFlow
 
     override val isAuthorizedFlow: Flow<Boolean>
-        get() = dataStore.userFlow.map { it != null }
+        get() = dataStore.userFlow.map { it != null && it.id.isNotEmpty() }
 
     override suspend fun isAuthorized(): Boolean = dataStore.getUser() != null
 
