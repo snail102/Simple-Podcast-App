@@ -5,6 +5,7 @@ import ru.anydevprojects.simplepodcastapp.authorization.di.authorizationModule
 import ru.anydevprojects.simplepodcastapp.core.dataStore.di.datastoreModule
 import ru.anydevprojects.simplepodcastapp.core.database.databaseModule
 import ru.anydevprojects.simplepodcastapp.core.network.networkModule
+import ru.anydevprojects.simplepodcastapp.core.pushToken.di.pushTokenModule
 import ru.anydevprojects.simplepodcastapp.core.token.di.tokenModule
 import ru.anydevprojects.simplepodcastapp.core.user.di.userModule
 import ru.anydevprojects.simplepodcastapp.exportPodcasts.di.exportPodcastsModule
@@ -33,6 +34,7 @@ val appModule = module {
         datastoreModule,
         userModule,
         rootModule,
-        tokenModule
+        tokenModule,
+        pushTokenModule
     )
 }

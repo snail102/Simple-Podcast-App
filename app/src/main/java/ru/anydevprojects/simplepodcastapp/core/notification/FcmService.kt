@@ -17,9 +17,11 @@ class FcmService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         Log.d("FcmService", message.data.toString())
-        Log.d("FcmService", message.data.toString())
         createNotificationChannel()
-        showNotification()
+        showNotification(
+            title = message.data["title"].orEmpty(),
+            body = message.data["body"].orEmpty()
+        )
     }
 
     private fun createNotificationChannel() {
@@ -38,12 +40,12 @@ class FcmService : FirebaseMessagingService() {
         }
     }
 
-    private fun showNotification() {
+    private fun showNotification(title: String, body: String) {
         // Создаем уведомление
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.icon) // Иконка уведомления
-            .setContentTitle("Простое уведомление")
-            .setContentText("Это текст простого уведомления")
+            .setContentTitle(title)
+            .setContentText(body)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
         // Показать уведомление

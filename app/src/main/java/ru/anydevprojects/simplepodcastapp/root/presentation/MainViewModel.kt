@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreenNavigation
 import ru.anydevprojects.simplepodcastapp.core.navigation.Screen
+import ru.anydevprojects.simplepodcastapp.core.pushToken.domain.PushTokenRepository
 import ru.anydevprojects.simplepodcastapp.core.token.domain.TokenRepository
 import ru.anydevprojects.simplepodcastapp.core.user.domain.UserRepository
 import ru.anydevprojects.simplepodcastapp.home.presentation.HomeScreenNavigation
@@ -21,7 +22,8 @@ import ru.anydevprojects.simplepodcastapp.root.presentation.models.EventMain
 
 class MainViewModel(
     private val userRepository: UserRepository,
-    private val tokenRepository: TokenRepository
+    private val tokenRepository: TokenRepository,
+    private val pushTokenRepository: PushTokenRepository
 ) : ViewModel() {
 
     private val _startDestination: MutableStateFlow<Screen?> = MutableStateFlow(null)
@@ -36,6 +38,7 @@ class MainViewModel(
             val hasToken = tokenRepository.hasToken()
             if (isAuthUser && hasToken) {
                 _startDestination.value = HomeScreenNavigation
+                updatePushToken()
                 Log.d("test1", startDestination.toString())
             } else {
                 _startDestination.value = AuthorizationScreenNavigation
@@ -55,7 +58,7 @@ class MainViewModel(
         authorizationStatusObserver()
     }
 
-    fun getFCMToken() {
+    private fun updatePushToken() {
         viewModelScope.launch {
             val token = suspendCoroutine<String> { continuation ->
                 FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
@@ -66,6 +69,7 @@ class MainViewModel(
                     }
                 }
             }
+            pushTokenRepository.sendToken(token = token)
             Log.d("MainViewModel", token)
         }
     }
@@ -81,6 +85,7 @@ class MainViewModel(
             }.collect { (previous, current) ->
                 if (previous != current) {
                     if (current) {
+                        updatePushToken()
                         _event.send(EventMain.NavigateToHome)
                     } else {
                         _event.send(EventMain.NavigateToAuthorization)
