@@ -1,5 +1,6 @@
 package ru.anydevprojects.simplepodcastapp.root.presentation
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -20,6 +21,7 @@ import nl.adaptivity.xmlutil.core.impl.multiplatform.name
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreen
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreenNavigation
+import ru.anydevprojects.simplepodcastapp.core.intentHandler.IntentHandler
 import ru.anydevprojects.simplepodcastapp.home.presentation.HomeScreen
 import ru.anydevprojects.simplepodcastapp.home.presentation.HomeScreenNavigation
 import ru.anydevprojects.simplepodcastapp.playbackQueue.presentation.PlaybackQueueScreen
@@ -50,8 +52,13 @@ class MainActivity : ComponentActivity() {
 
         Log.d("test", "onCreate")
 
+        IntentHandler.handleOnCreate(intent)?.let {
+            viewModel.handleIntentData(it)
+        }
+
         // startService(Intent(this, JetAudioService::class.java))
         // viewModel.getFCMToken()
+
         enableEdgeToEdge()
         Log.d("test", "before setContent")
         setContent {
@@ -87,6 +94,18 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+
+                        is EventMain.NavigateToEpisode -> {
+                            Log.d("NavigateToEpisode", "navigateToEpisode ${event.id}")
+                            navController.navigate(
+                                PodcastEpisodeScreenNavigation(episodeId = event.id)
+                            ) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
+                        }
                     }
                 }
             }
@@ -100,6 +119,8 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             startDestination = it
                         ) {
+                            viewModel.startDestinationInitialized()
+
                             composable<AuthorizationScreenNavigation> {
                                 AuthorizationScreen()
                             }
@@ -175,6 +196,13 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        IntentHandler.handleIntent(intent)?.let {
+            viewModel.handleIntentData(it)
         }
     }
 }

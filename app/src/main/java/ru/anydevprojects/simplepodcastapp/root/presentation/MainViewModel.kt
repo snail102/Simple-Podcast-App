@@ -9,10 +9,13 @@ import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreenNavigation
+import ru.anydevprojects.simplepodcastapp.core.intentHandler.ResolvedIntentData
 import ru.anydevprojects.simplepodcastapp.core.navigation.Screen
 import ru.anydevprojects.simplepodcastapp.core.pushToken.domain.PushTokenRepository
 import ru.anydevprojects.simplepodcastapp.core.token.domain.TokenRepository
@@ -31,6 +34,9 @@ class MainViewModel(
 
     private val _stateInitialApp: MutableStateFlow<Boolean> = MutableStateFlow(true)
     val stateInitialApp = _stateInitialApp.asStateFlow()
+
+    private val _graphInitialized: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val graphInitialized = _graphInitialized.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -93,5 +99,33 @@ class MainViewModel(
                 }
             }
         }
+    }
+
+    fun handleIntentData(resolvedIntentData: ResolvedIntentData) {
+        Log.d("test", resolvedIntentData.toString())
+        viewModelScope.launch {
+            when (resolvedIntentData) {
+                is ResolvedIntentData.OpenEpisodeScreen -> {
+                    startDestination.combine(
+                        graphInitialized
+                    ) { startDestination, graphInitialized ->
+                        Log.d(
+                            "OpenEpisodeScreen",
+                            "startDestination = $startDestination graphInitialized = $graphInitialized"
+                        )
+                        if (startDestination != null && graphInitialized) {
+                            _event.send(
+                                EventMain.NavigateToEpisode(id = resolvedIntentData.episodeId)
+                            )
+                            return@combine
+                        }
+                    }.launchIn(viewModelScope)
+                }
+            }
+        }
+    }
+
+    fun startDestinationInitialized() {
+        _graphInitialized.value = true
     }
 }
