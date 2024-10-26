@@ -150,4 +150,5 @@ dependencies {
     implementation(libs.datastore.proto)
     implementation(libs.protobuf.kotlin.lite)
     implementation(libs.splashscreen)
+    implementation(libs.material)
 }

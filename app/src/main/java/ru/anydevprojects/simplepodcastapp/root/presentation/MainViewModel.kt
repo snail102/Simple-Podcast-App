@@ -22,6 +22,7 @@ import ru.anydevprojects.simplepodcastapp.core.token.domain.TokenRepository
 import ru.anydevprojects.simplepodcastapp.core.user.domain.UserRepository
 import ru.anydevprojects.simplepodcastapp.home.presentation.HomeScreenNavigation
 import ru.anydevprojects.simplepodcastapp.root.presentation.models.EventMain
+import ru.anydevprojects.simplepodcastapp.root.presentation.models.PlayerControlState
 
 class MainViewModel(
     private val userRepository: UserRepository,
@@ -37,6 +38,10 @@ class MainViewModel(
 
     private val _graphInitialized: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val graphInitialized = _graphInitialized.asStateFlow()
+
+    private val _playerControlState: MutableStateFlow<PlayerControlState> =
+        MutableStateFlow(PlayerControlState())
+    val playerControlState = _playerControlState.asStateFlow()
 
     init {
         viewModelScope.launch {
