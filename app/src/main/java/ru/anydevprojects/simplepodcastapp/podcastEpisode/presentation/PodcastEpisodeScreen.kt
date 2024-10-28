@@ -44,7 +44,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.models.PodcastEpisodeState
 import ru.anydevprojects.simplepodcastapp.ui.components.EpisodeControlPanel
-import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
+import ru.anydevprojects.simplepodcastapp.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -204,7 +204,7 @@ private fun EpisodeContent(
 @Preview
 @Composable
 private fun EpisodeContentPreview() {
-    SimplePodcastAppTheme {
+    AppTheme {
         EpisodeContent(
             state = PodcastEpisodeState.Content(
                 title = "title",

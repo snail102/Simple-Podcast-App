@@ -4,12 +4,14 @@ import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -27,20 +29,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import org.koin.androidx.compose.koinViewModel
+import ru.anydevprojects.simplepodcastapp.playControl.presentation.models.PlayControlIntent
 import ru.anydevprojects.simplepodcastapp.playControl.presentation.models.TimePosition
 import ru.anydevprojects.simplepodcastapp.ui.components.PlayControlIconBtn
-import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
+import ru.anydevprojects.simplepodcastapp.ui.theme.AppTheme
 
 @Composable
-fun PlayControlScreen() {
+fun PlayControlScreen(viewModel: PlayControlViewModel = koinViewModel()) {
+    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
+
     PlayControlScreenContent(
-        isPlaying = false,
-        onClick = {},
-        nameEpisode = "name",
+        isPlaying = state.isPlaying,
+        onClick = {
+            viewModel.onIntent(PlayControlIntent.OnChangePlayState)
+        },
+        nameEpisode = state.episodeName,
         timePosition = mutableStateOf(
             TimePosition(
                 currentTime = "1:1",
@@ -48,7 +56,7 @@ fun PlayControlScreen() {
                 trackPosition = 0.3F
             )
         ),
-        coverUrl = "",
+        coverUrl = state.imageUrl,
         onChangeCurrentPositionMedia = {}
     )
 }
@@ -65,7 +73,7 @@ private fun PlayControlScreenContent(
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier
-                .background(color = Color.LightGray)
+                .background(MaterialTheme.colorScheme.surfaceDim)
                 .padding(start = 16.dp, bottom = 16.dp, end = 16.dp, top = 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -74,7 +82,8 @@ private fun PlayControlScreenContent(
             AsyncImage(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(1f)
+                    .clip(RoundedCornerShape(16.dp)),
                 model = coverUrl,
                 contentDescription = null
             )
@@ -115,7 +124,8 @@ fun MiniPlayer(
     isPlaying: Boolean,
     coverUrl: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues()
 ) {
     var progress by remember { mutableFloatStateOf(timePosition.value.trackPosition) }
     val animatedProgress = animateFloatAsState(
@@ -126,11 +136,16 @@ fun MiniPlayer(
 
     Column(
         modifier = modifier
+            .background(color = MaterialTheme.colorScheme.surfaceDim)
+            .padding(paddingValues)
     ) {
         LinearProgressIndicator(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
             progress = { animatedProgress },
-            color = Color.Red
+            color = MaterialTheme.colorScheme.inverseSurface,
+            trackColor = MaterialTheme.colorScheme.outlineVariant
         )
 
         Row(
@@ -140,19 +155,27 @@ fun MiniPlayer(
             AsyncImage(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(32.dp)),
+                    .clip(RoundedCornerShape(16.dp)),
                 model = coverUrl,
                 contentDescription = null
             )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
             Text(
                 modifier = Modifier.weight(1f),
                 text = nameEpisode,
-                style = MaterialTheme.typography.labelMedium,
-                maxLines = 2
+                style = MaterialTheme.typography.labelMedium.copy(),
+                color = MaterialTheme.colorScheme.inverseSurface,
+                maxLines = 2,
+                minLines = 2
             )
+
+            Spacer(modifier = Modifier.width(8.dp))
 
             PlayControlIconBtn(
                 isPlaying = isPlaying,
+                tint = MaterialTheme.colorScheme.inverseSurface,
                 onClick = onClick
             )
         }
@@ -163,11 +186,11 @@ fun MiniPlayer(
 @Preview
 @Composable
 private fun MiniPlayerPreview() {
-    SimplePodcastAppTheme {
+    AppTheme {
         MiniPlayer(
             isPlaying = false,
             onClick = {},
-            nameEpisode = "name",
+            nameEpisode = "name sabdbadb sahdbasdb asdbaj sduhab dsaib dsiabd ab sdaibsd n",
             timePosition = mutableStateOf(
                 TimePosition(
                     currentTime = "",
@@ -175,7 +198,9 @@ private fun MiniPlayerPreview() {
                     trackPosition = 0.01F
                 )
             ),
-            coverUrl = ""
+            coverUrl = "",
+            modifier = Modifier.height(100.dp),
+            paddingValues = PaddingValues(bottom = 24.dp)
         )
     }
 }
@@ -184,7 +209,7 @@ private fun MiniPlayerPreview() {
 @Preview
 @Composable
 private fun PlayControlScreenContentPreview() {
-    SimplePodcastAppTheme {
+    AppTheme {
         PlayControlScreenContent(
             isPlaying = false,
             onClick = {},

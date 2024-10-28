@@ -14,11 +14,11 @@ sealed interface HomeState : ViewState {
     data object ExportProcessing : HomeState
 
     data class Content(
-        val homeScreenItems: List<HomeScreenItem> = emptyList(),
+        val podcastEpisodes: List<PodcastEpisodeUi> = emptyList(),
+        val podcastsSubscriptions: List<PodcastSubscriptionUi> = emptyList(),
         val searchContent: SearchContent = SearchContent(),
         val mediaPlayerContent: MediaPlayerContent = MediaPlayerContent()
-    ) : HomeState,
-        ContentViewState
+    ) : HomeState, ContentViewState
 }
 
 data class SearchContent(

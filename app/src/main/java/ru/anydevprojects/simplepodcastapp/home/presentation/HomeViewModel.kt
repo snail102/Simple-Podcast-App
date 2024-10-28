@@ -1,19 +1,18 @@
 package ru.anydevprojects.simplepodcastapp.home.presentation
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.annotation.OptIn
-import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import ru.anydevprojects.simplepodcastapp.core.mediaPlayerControl.domain.MediaData
+import ru.anydevprojects.simplepodcastapp.core.mediaPlayerControl.domain.MediaPlayerControl
+import ru.anydevprojects.simplepodcastapp.core.mediaPlayerControl.domain.PlayMediaData
+import ru.anydevprojects.simplepodcastapp.core.mediaPlayerControl.domain.PlayState
 import ru.anydevprojects.simplepodcastapp.core.ui.BaseViewModel
 import ru.anydevprojects.simplepodcastapp.exportPodcasts.domain.ExportPodcastsRepository
 import ru.anydevprojects.simplepodcastapp.home.domain.HomeRepository
@@ -21,16 +20,10 @@ import ru.anydevprojects.simplepodcastapp.home.presentation.mappers.toPodcastSub
 import ru.anydevprojects.simplepodcastapp.home.presentation.mappers.toUi
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeEvent
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeIntent
-import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeScreenItem
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeState
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastEpisodeUi
-import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastsSubscriptions
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.SearchContent
 import ru.anydevprojects.simplepodcastapp.importPodcasts.domain.ImportPodcastsRepository
-import ru.anydevprojects.simplepodcastapp.media.AudioItemState
-import ru.anydevprojects.simplepodcastapp.media.JetAudioServiceHandler
-import ru.anydevprojects.simplepodcastapp.media.JetAudioState
-import ru.anydevprojects.simplepodcastapp.media.PlayerEvent
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.domain.PodcastEpisodeRepository
 import ru.anydevprojects.simplepodcastapp.podcastFeed.domain.PodcastFeedRepository
 
@@ -38,19 +31,15 @@ class HomeViewModel(
     private val homeRepository: HomeRepository,
     private val podcastEpisodeRepository: PodcastEpisodeRepository,
     private val podcastFeedRepository: PodcastFeedRepository,
-    private val applicationContext: Context,
-    private val jetAudioServiceHandler: JetAudioServiceHandler,
     private val importPodcastsRepository: ImportPodcastsRepository,
-    private val exportPodcastsRepository: ExportPodcastsRepository
+    private val exportPodcastsRepository: ExportPodcastsRepository,
+    private val mediaPlayerControl: MediaPlayerControl
 ) :
     BaseViewModel<HomeState, HomeState.Content, HomeIntent, HomeEvent>(
         initialStateAndDefaultContentState = {
             HomeState.Loading to HomeState.Content()
         }
     ) {
-
-    private var episodes: List<PodcastEpisodeUi> = emptyList()
-    private var podcastsSubscriptions: PodcastsSubscriptions = PodcastsSubscriptions()
 
     override fun onStart() {
         super.onStart()
@@ -59,106 +48,10 @@ class HomeViewModel(
     }
 
     init {
-        viewModelScope.launch {
-            jetAudioServiceHandler.audioState.collectLatest { mediaState ->
-                when (mediaState) {
-                    JetAudioState.Initial -> {
-                        Log.d("AudioService", "Initial")
-                    }
-
-                    is JetAudioState.Buffering -> {
-                        Log.d("AudioService", "Buffering")
-                    }
-
-                    is JetAudioState.Playing -> {
-                        val id = jetAudioServiceHandler.currentPlayingId?.toLongOrNull()
-                        updateState(
-                            lastContentState.copy(
-                                mediaPlayerContent = lastContentState.mediaPlayerContent.copy(
-                                    enabled = true,
-                                    isPlaying = mediaState.isPlaying
-                                ),
-                                homeScreenItems = lastContentState.homeScreenItems.map {
-                                    when (it) {
-                                        is PodcastEpisodeUi -> if (
-                                            id != null &&
-                                            it.id == id &&
-                                            mediaState.isPlaying
-                                        ) {
-                                            it.copy(
-                                                isPlaying = true
-                                            )
-                                        } else {
-                                            it.copy(
-                                                isPlaying = false
-                                            )
-                                        }
-
-                                        is PodcastsSubscriptions -> it
-                                    }
-                                }
-                            )
-                        )
-                    }
-
-                    is JetAudioState.Progress -> {
-                        Log.d("AudioService", "Progress ${mediaState.progress}")
-                    }
-
-                    is JetAudioState.CurrentPlaying -> {
-                        Log.d("AudioService", "CurrentPlaying ${mediaState.mediaItemIndex}")
-                    }
-
-                    is JetAudioState.Ready -> {
-                        Log.d("AudioService", "Ready ${mediaState.duration}")
-                    }
-                }
-            }
-        }
-
-        jetAudioServiceHandler.audioItemState.onEach { value: AudioItemState ->
-
-            when (value) {
-                is AudioItemState.Current -> {
-                    updateState(
-                        lastContentState.copy(
-                            mediaPlayerContent = lastContentState.mediaPlayerContent.copy(
-                                enabled = true,
-                                title = value.title,
-                                imageUrl = value.imageUri?.toString().orEmpty()
-                            )
-                        )
-                    )
-                }
-
-                AudioItemState.Empty -> {
-                    updateState(
-                        lastContentState.copy(
-                            mediaPlayerContent = lastContentState.mediaPlayerContent.copy(
-                                enabled = false,
-                                title = "",
-                                imageUrl = ""
-                            )
-                        )
-                    )
-                }
-            }
-        }.launchIn(viewModelScope)
-
-        jetAudioServiceHandler.isPlaybackQueue.onEach {
-            updateState(
-                lastContentState.copy(
-                    mediaPlayerContent = lastContentState.mediaPlayerContent.copy(
-                        enabledPlaybackQueue = it
-                    )
-                )
-            )
-        }.launchIn(viewModelScope)
-    }
-
-    init {
         collectSubscriptionPodcasts()
         collectEpisodes()
+        collectCurrentMedia()
+        collectPlayingState()
     }
 
     override fun onIntent(intent: HomeIntent) {
@@ -169,11 +62,7 @@ class HomeViewModel(
             HomeIntent.OnBackFromSearchClick -> closeSearch()
             is HomeIntent.OnPlayEpisodeBtnClick -> playEpisode(intent.episodeUi)
             HomeIntent.OnChangePayingCurrentMediaBtnClick -> {
-                viewModelScope.launch {
-                    jetAudioServiceHandler.onPlayerEvents(
-                        PlayerEvent.PlayPause
-                    )
-                }
+                mediaPlayerControl.changePlayStatus()
             }
 
             HomeIntent.OnDismissMore -> dismissMoreMenu()
@@ -275,35 +164,24 @@ class HomeViewModel(
     @SuppressLint("RestrictedApi")
     private fun playEpisode(episodeUi: PodcastEpisodeUi) {
         viewModelScope.launch {
-            val state = jetAudioServiceHandler.audioItemState.value
-            if (state is AudioItemState.Current && state.id == episodeUi.id.toString()) {
-                jetAudioServiceHandler.onPlayerEvents(
-                    PlayerEvent.PlayPause
+            mediaPlayerControl.play(
+                PlayMediaData(
+                    id = episodeUi.id,
+                    title = episodeUi.title,
+                    imageUrl = episodeUi.imageUrl,
+                    audioUrl = episodeUi.audioUrl
                 )
-            } else {
-                val metadata = MediaMetadata.Builder()
-                    .setDisplayTitle(episodeUi.title)
-                    .setArtworkUri(episodeUi.imageUrl.toUri())
-                    // .setGenre(genres)
-                    .build()
-
-                val item = MediaItem.Builder()
-                    .setUri(episodeUi.audioUrl.toUri())
-                    .setMediaId(episodeUi.id.toString())
-                    .setMediaMetadata(metadata)
-                    .build()
-
-                jetAudioServiceHandler.setPlayMediaItem(item)
-            }
+            )
         }
     }
 
     private fun collectSubscriptionPodcasts() {
         podcastFeedRepository.getSubscriptionPodcasts().onEach {
-            podcastsSubscriptions = podcastsSubscriptions.copy(
-                podcasts = it.map { podcastFeed -> podcastFeed.toPodcastSubscriptionUi() }
+            updateState(
+                lastContentState.copy(
+                    podcastsSubscriptions = it.map { it.toPodcastSubscriptionUi() }
+                )
             )
-            updateState()
         }.launchIn(viewModelScope)
     }
 
@@ -321,24 +199,70 @@ class HomeViewModel(
 
     private fun collectEpisodes() {
         podcastEpisodeRepository.getAllEpisodesSubscriptions().onEach {
-            episodes = it.map { episode -> episode.toUi(false) }
-
-            updateState()
+            val currentPlayingId = mediaPlayerControl.currentMediaContent?.id
+            updateState(
+                lastContentState.copy(
+                    podcastEpisodes = it.map { episode ->
+                        episode.toUi(
+                            isPlaying = episode.id == currentPlayingId && mediaPlayerControl.playState.value is PlayState.Playing
+                        )
+                    }
+                )
+            )
         }.launchIn(viewModelScope)
     }
 
-    private fun updateState() {
-        val podcastsSubscriptionsHomeScreenItem = podcastsSubscriptions as? HomeScreenItem
-        val episodesHomeScreenItem = episodes as? List<HomeScreenItem>
-
-        updateState(
-            lastContentState.copy(
-                homeScreenItems = buildList {
-                    podcastsSubscriptionsHomeScreenItem?.let { it1 -> add(it1) }
-                    episodesHomeScreenItem?.let { it1 -> addAll(it1) }
+    private fun collectCurrentMedia() {
+        mediaPlayerControl.currentMedia.onEach { mediaData ->
+            when (mediaData) {
+                is MediaData.Content -> {
+                    updateState(
+                        lastContentState.copy(
+                            podcastEpisodes = lastContentState.podcastEpisodes.map {
+                                it.copy(
+                                    isPlaying = it.id == mediaData.id && mediaPlayerControl.playState.value is PlayState.Playing
+                                )
+                            }
+                        )
+                    )
                 }
-            )
-        )
+
+                MediaData.Init -> {}
+                MediaData.Loading -> {}
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    private fun collectPlayingState() {
+        mediaPlayerControl.playState.onEach { playState ->
+            when (playState) {
+                PlayState.Init -> {}
+                PlayState.Loading -> {}
+                PlayState.Pause -> {
+                    updateState(
+                        lastContentState.copy(
+                            podcastEpisodes = lastContentState.podcastEpisodes.map {
+                                it.copy(
+                                    isPlaying = false
+                                )
+                            }
+                        )
+                    )
+                }
+
+                PlayState.Playing -> {
+                    updateState(
+                        lastContentState.copy(
+                            podcastEpisodes = lastContentState.podcastEpisodes.map {
+                                it.copy(
+                                    isPlaying = it.id == mediaPlayerControl.currentMediaContent?.id
+                                )
+                            }
+                        )
+                    )
+                }
+            }
+        }.launchIn(viewModelScope)
     }
 
     private fun changeSearchQuery(newQuery: String) {

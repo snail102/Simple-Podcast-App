@@ -52,7 +52,7 @@ import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.models.Podcas
 import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.models.PodcastFeedState
 import ru.anydevprojects.simplepodcastapp.podcastFeed.presentation.models.PodcastInfo
 import ru.anydevprojects.simplepodcastapp.ui.components.EpisodeControlPanel
-import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
+import ru.anydevprojects.simplepodcastapp.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -273,7 +273,7 @@ private fun ContentHomeScreen(
 @Preview
 @Composable
 private fun ContentPreview() {
-    SimplePodcastAppTheme {
+    AppTheme {
         ContentHomeScreen(
             podcastInfo = PodcastInfo(
                 title = "Названиnjasd asdsadsa dba dbsa dabs dsab dnbajds nsa djad ajd s adajd е",
@@ -287,7 +287,7 @@ private fun ContentPreview() {
             contentPadding = PaddingValues(),
             onChangeSubscribeBtnClick = {},
             onEpisodeClick = {},
-            onBackClick  = {}
+            onBackClick = {}
         )
     }
 }
@@ -375,7 +375,7 @@ private fun TopBar(onBackClick: () -> Unit, topPadding: Dp, modifier: Modifier =
 @Preview
 @Composable
 private fun TopBarPreview() {
-    SimplePodcastAppTheme {
+    AppTheme {
         TopBar(
             topPadding = 22.dp,
             onBackClick = {}
@@ -386,7 +386,7 @@ private fun TopBarPreview() {
 @Preview
 @Composable
 private fun EpisodeItemPreview() {
-    SimplePodcastAppTheme {
+    AppTheme {
         EpisodeItem(
             episodeUi = PodcastEpisodeUi(
                 id = 0,

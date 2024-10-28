@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.anydevprojects.simplepodcastapp.R
-import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
+import ru.anydevprojects.simplepodcastapp.ui.theme.AppTheme
 
 @Composable
 fun EpisodeControlPanel(
@@ -146,7 +146,7 @@ fun AddPlaybackListControlIconBtn(
 private fun EpisodeControlPanelPreview(
     @PreviewParameter(EpisodeControlPanelProvider::class) data: EpisodeControlPanelData
 ) {
-    SimplePodcastAppTheme {
+    AppTheme {
         EpisodeControlPanel(
             isDownloaded = data.isDownloaded,
             isAddedPlaylist = data.isAddedPlaylist,

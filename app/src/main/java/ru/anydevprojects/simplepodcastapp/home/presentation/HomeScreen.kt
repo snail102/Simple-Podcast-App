@@ -38,6 +38,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
@@ -76,11 +77,10 @@ import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeIntent
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.HomeState
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastEpisodeUi
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastSubscriptionUi
-import ru.anydevprojects.simplepodcastapp.home.presentation.models.PodcastsSubscriptions
 import ru.anydevprojects.simplepodcastapp.home.presentation.models.SearchContent
 import ru.anydevprojects.simplepodcastapp.ui.components.BottomMediaPlayer
 import ru.anydevprojects.simplepodcastapp.ui.components.PlayControlIconBtn
-import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
+import ru.anydevprojects.simplepodcastapp.ui.theme.AppTheme
 import ru.anydevprojects.simplepodcastapp.utils.rememberFlowWithLifecycle
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -135,7 +135,9 @@ fun HomeScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surfaceBright)
 //        topBar = {
 //            when (val localState = state) {
 //                is HomeState.Content ->
@@ -282,39 +284,38 @@ private fun ContentHomeScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(bottom = 80.dp + contentPadding.calculateBottomPadding())
         ) {
+            item {
+                PodcastsSubscriptionsHeader(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            alpha = firstItemVisibility
+                            translationY = firstItemTranslationY
+                        },
+                    podcastsSubscriptions = homeState.podcastsSubscriptions,
+                    topBarPadding = contentPadding.calculateTopPadding(),
+                    onClick = {
+                        onPodcastClick(it.id)
+                    }
+                )
+            }
+
             items(
-                items = homeState.homeScreenItems,
+                items = homeState.podcastEpisodes,
                 key = { item ->
                     item.hashCode()
                 }
             ) { homeScreenItem ->
-                when (homeScreenItem) {
-                    is PodcastsSubscriptions -> PodcastsSubscriptionsHeader(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .graphicsLayer {
-                                alpha = firstItemVisibility
-                                translationY = firstItemTranslationY
-                            },
-                        podcastsSubscriptions = homeScreenItem,
-                        topBarPadding = contentPadding.calculateTopPadding(),
-                        onClick = {
-                            onPodcastClick(it.id)
-                        }
-                    )
-
-                    is PodcastEpisodeUi -> PodcastEpisodeItem(
-                        // animatedVisibilityScope = animatedVisibilityScope,
-                        modifier = Modifier.fillMaxWidth(),
-                        podcastEpisodeUi = homeScreenItem,
-                        onClick = {
-                            onEpisodeClick(homeScreenItem.id)
-                        },
-                        onPlayBtnClick = {
-                            viewModel.onIntent(HomeIntent.OnPlayEpisodeBtnClick(homeScreenItem))
-                        }
-                    )
-                }
+                PodcastEpisodeItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    podcastEpisodeUi = homeScreenItem,
+                    onClick = {
+                        onEpisodeClick(homeScreenItem.id)
+                    },
+                    onPlayBtnClick = {
+                        viewModel.onIntent(HomeIntent.OnPlayEpisodeBtnClick(homeScreenItem))
+                    }
+                )
             }
         }
         Box(
@@ -343,7 +344,7 @@ private fun ContentHomeScreen(
 @Composable
 private fun PodcastsSubscriptionsHeader(
     topBarPadding: Dp,
-    podcastsSubscriptions: PodcastsSubscriptions,
+    podcastsSubscriptions: List<PodcastSubscriptionUi>,
     onClick: (PodcastSubscriptionUi) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -352,13 +353,13 @@ private fun PodcastsSubscriptionsHeader(
             .clip(
                 RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
             )
-            .background(color = Color.Red)
+            .background(color = MaterialTheme.colorScheme.primaryContainer)
             .padding(top = topBarPadding + 88.dp, bottom = 32.dp),
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(
-            items = podcastsSubscriptions.podcasts,
+            items = podcastsSubscriptions,
             key = {
                 it.id
             }
@@ -399,7 +400,7 @@ private fun PodcastEpisodeItem(
         modifier = modifier
             .padding(horizontal = 12.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(color = Color.Cyan)
+            .background(color = MaterialTheme.colorScheme.secondaryContainer)
             .clickable { onClick() }
             .padding(vertical = 8.dp, horizontal = 16.dp)
     ) {
@@ -440,7 +441,7 @@ private fun PodcastEpisodeItem(
                 onClick = {
                     onPlayBtnClick()
                 },
-                tint = Color.Black
+                tint = MaterialTheme.colorScheme.inverseSurface
             )
         }
     }
@@ -449,7 +450,7 @@ private fun PodcastEpisodeItem(
 @Preview
 @Composable
 private fun PodcastEpisodeItemPreview() {
-    SimplePodcastAppTheme {
+    AppTheme {
         PodcastEpisodeItem(
             podcastEpisodeUi = PodcastEpisodeUi(
                 id = 0,
@@ -688,7 +689,7 @@ private fun PodcastFeedsItem(
 @Preview
 @Composable
 private fun PodcastFeedsItemPreview() {
-    SimplePodcastAppTheme {
+    AppTheme {
         PodcastFeedsItem(
             podcastFeed = PodcastFeedSearched(
                 id = 0,

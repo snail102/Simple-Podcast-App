@@ -5,5 +5,5 @@ import org.koin.dsl.module
 import ru.anydevprojects.simplepodcastapp.root.presentation.MainViewModel
 
 val rootModule = module {
-    viewModel { MainViewModel(get(), get(), get()) }
+    viewModel { MainViewModel(get(), get(), get(), get()) }
 }

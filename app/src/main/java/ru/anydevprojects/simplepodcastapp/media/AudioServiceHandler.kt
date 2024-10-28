@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.anydevprojects.simplepodcastapp.utils.currentMediaItems
 
 @OptIn(UnstableApi::class)
@@ -82,9 +83,11 @@ class JetAudioServiceHandler(
     }
 
     suspend fun setPlayMediaItem(mediaItem: MediaItem) {
-        exoPlayer.setMediaItem(mediaItem)
-        exoPlayer.prepare()
-        playOrPause()
+        withContext(Dispatchers.Main) {
+            exoPlayer.setMediaItem(mediaItem)
+            exoPlayer.prepare()
+            playOrPause()
+        }
     }
 
     fun addMediaItem(mediaItem: MediaItem) {
@@ -177,20 +180,22 @@ class JetAudioServiceHandler(
     }
 
     private suspend fun playOrPause() {
-        if (exoPlayer.isPlaying) {
-            exoPlayer.pause()
-            stopProgressUpdate()
-        } else {
-            exoPlayer.play()
-            _audioState.value = JetAudioState.Playing(isPlaying = true)
+        withContext(Dispatchers.Main) {
+            if (exoPlayer.isPlaying) {
+                exoPlayer.pause()
+                stopProgressUpdate()
+            } else {
+                exoPlayer.play()
+                _audioState.value = JetAudioState.Playing(isPlaying = true)
 
-            _audioItemState.value = AudioItemState.Current(
-                id = exoPlayer.currentMediaItem?.mediaId.orEmpty(),
-                title = exoPlayer.mediaMetadata.displayTitle.toString(),
-                imageUri = exoPlayer.mediaMetadata.artworkUri
-            )
+                _audioItemState.value = AudioItemState.Current(
+                    id = exoPlayer.currentMediaItem?.mediaId.orEmpty(),
+                    title = exoPlayer.mediaMetadata.displayTitle.toString(),
+                    imageUri = exoPlayer.mediaMetadata.artworkUri
+                )
 
-            startProgressUpdate()
+                startProgressUpdate()
+            }
         }
     }
 

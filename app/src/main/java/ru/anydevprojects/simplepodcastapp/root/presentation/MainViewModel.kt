@@ -1,6 +1,14 @@
 package ru.anydevprojects.simplepodcastapp.root.presentation
 
 import android.util.Log
+import androidx.compose.material.BottomSheetScaffoldState
+import androidx.compose.material.BottomSheetState
+import androidx.compose.material.BottomSheetValue
+import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material.rememberBottomSheetState
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
@@ -8,7 +16,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -16,6 +26,9 @@ import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreenNavigation
 import ru.anydevprojects.simplepodcastapp.core.intentHandler.ResolvedIntentData
+import ru.anydevprojects.simplepodcastapp.core.mediaPlayerControl.domain.MediaData
+import ru.anydevprojects.simplepodcastapp.core.mediaPlayerControl.domain.MediaPlayerControl
+import ru.anydevprojects.simplepodcastapp.core.mediaPlayerControl.domain.PlayState
 import ru.anydevprojects.simplepodcastapp.core.navigation.Screen
 import ru.anydevprojects.simplepodcastapp.core.pushToken.domain.PushTokenRepository
 import ru.anydevprojects.simplepodcastapp.core.token.domain.TokenRepository
@@ -27,7 +40,8 @@ import ru.anydevprojects.simplepodcastapp.root.presentation.models.PlayerControl
 class MainViewModel(
     private val userRepository: UserRepository,
     private val tokenRepository: TokenRepository,
-    private val pushTokenRepository: PushTokenRepository
+    private val pushTokenRepository: PushTokenRepository,
+    private val mediaPlayerControl: MediaPlayerControl
 ) : ViewModel() {
 
     private val _startDestination: MutableStateFlow<Screen?> = MutableStateFlow(null)
@@ -56,6 +70,38 @@ class MainViewModel(
             }
             _stateAuth.value = isAuthUser
             _stateInitialApp.value = false
+        }
+
+        viewModelScope.launch {
+            mediaPlayerControl.currentMedia.combine(
+                mediaPlayerControl.playState
+            ) { mediaData: MediaData, playState: PlayState ->
+                Log.d("playerOnMainViewModel", "mediaData: $mediaData playState: $playState")
+                val content = when (mediaData) {
+                    is MediaData.Content -> mediaData
+                    MediaData.Init -> null
+                    MediaData.Loading -> null
+                }
+
+                if (content != null) {
+                    val isPlaying = when (playState) {
+                        PlayState.Init -> false
+                        PlayState.Loading -> false
+                        PlayState.Pause -> false
+                        PlayState.Playing -> true
+                    }
+                    _playerControlState.value = PlayerControlState(
+                        isEnabled = true,
+                        imageUrl = content.imageUrl,
+                        title = content.title,
+                        isPlaying = isPlaying
+                    )
+                } else {
+                    _playerControlState.value = PlayerControlState(
+                        isEnabled = false
+                    )
+                }
+            }.collect()
         }
     }
 

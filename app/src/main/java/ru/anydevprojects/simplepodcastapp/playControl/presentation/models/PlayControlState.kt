@@ -7,5 +7,9 @@ sealed interface PlayControlState : ViewState {
 
     data object Loading : PlayControlState
 
-    data class Content(val episodeName: String = "") : ViewState, ContentViewState
+    data class Content(
+        val episodeName: String = "",
+        val imageUrl: String = "",
+        val isPlaying: Boolean = false
+    ) : PlayControlState, ContentViewState
 }

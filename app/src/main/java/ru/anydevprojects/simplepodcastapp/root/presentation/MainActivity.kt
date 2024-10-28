@@ -8,11 +8,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetValue
@@ -29,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -64,7 +62,7 @@ import ru.anydevprojects.simplepodcastapp.ui.components.bottomsheet.SheetCollaps
 import ru.anydevprojects.simplepodcastapp.ui.components.bottomsheet.SheetContent
 import ru.anydevprojects.simplepodcastapp.ui.components.bottomsheet.SheetExpanded
 import ru.anydevprojects.simplepodcastapp.ui.components.bottomsheet.currentFraction
-import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
+import ru.anydevprojects.simplepodcastapp.ui.theme.AppTheme
 import ru.anydevprojects.simplepodcastapp.utils.pxToDp
 import ru.anydevprojects.simplepodcastapp.utils.rememberFlowWithLifecycle
 
@@ -101,6 +99,8 @@ class MainActivity : ComponentActivity() {
 
             val density = LocalDensity.current
 
+            val playerControlState by viewModel.playerControlState.collectAsStateWithLifecycle()
+
             val navigationBars = WindowInsets.navigationBars.getBottom(density).pxToDp()
 
             val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            SimplePodcastAppTheme {
+            AppTheme {
                 SharedTransitionLayout(
                     modifier = Modifier
                 ) {
@@ -137,43 +137,51 @@ class MainActivity : ComponentActivity() {
                                 topStart = radiusBottomSheet,
                                 topEnd = radiusBottomSheet
                             ),
-                            sheetPeekHeight = 70.dp + navigationBars,
+                            sheetPeekHeight = if (playerControlState.isEnabled) {
+                                100.dp
+                            } else {
+                                0.dp
+                            },
                             sheetContent = {
-                                SheetContent(
-                                    heightFraction = 1f
-                                ) {
-                                    SheetExpanded {
-                                        PlayControlScreen()
-                                    }
-                                    SheetCollapsed(
-                                        isCollapsed = bottomSheetScaffoldState.bottomSheetState.isCollapsed,
-                                        currentFraction = bottomSheetScaffoldState.currentFraction,
-                                        onSheetClick = {}
+                                if (playerControlState.isEnabled) {
+                                    SheetContent(
+                                        heightFraction = 1f
                                     ) {
-                                        MiniPlayer(
-                                            modifier = Modifier
-                                                .clip(
-                                                    RoundedCornerShape(
-                                                        topStart = 32.dp,
-                                                        topEnd = 32.dp
+                                        SheetExpanded(
+                                            currentFraction = bottomSheetScaffoldState.currentFraction
+                                        ) {
+                                            PlayControlScreen()
+                                        }
+                                        SheetCollapsed(
+                                            isCollapsed = bottomSheetScaffoldState.bottomSheetState.isCollapsed,
+                                            currentFraction = bottomSheetScaffoldState.currentFraction,
+                                            onSheetClick = {}
+                                        ) {
+                                            MiniPlayer(
+                                                modifier = Modifier
+                                                    .clip(
+                                                        RoundedCornerShape(
+                                                            topStart = 32.dp,
+                                                            topEnd = 32.dp
+                                                        )
                                                     )
-                                                )
-                                                .background(color = Color.DarkGray)
-                                                .padding(bottom = navigationBars)
-                                                .height(70.dp),
-
-                                            isPlaying = false,
-                                            onClick = {},
-                                            nameEpisode = "name",
-                                            timePosition = mutableStateOf(
-                                                TimePosition(
-                                                    currentTime = "",
-                                                    totalTime = "",
-                                                    trackPosition = 0.01F
-                                                )
-                                            ),
-                                            coverUrl = ""
-                                        )
+                                                    .height(100.dp),
+                                                paddingValues = PaddingValues(
+                                                    bottom = navigationBars
+                                                ),
+                                                isPlaying = playerControlState.isPlaying,
+                                                onClick = {},
+                                                nameEpisode = playerControlState.title,
+                                                timePosition = mutableStateOf(
+                                                    TimePosition(
+                                                        currentTime = "",
+                                                        totalTime = "",
+                                                        trackPosition = 0.01F
+                                                    )
+                                                ),
+                                                coverUrl = playerControlState.imageUrl
+                                            )
+                                        }
                                     }
                                 }
                             }

@@ -1,7 +1,6 @@
 package ru.anydevprojects.simplepodcastapp.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,7 +21,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import ru.anydevprojects.simplepodcastapp.R
-import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
+import ru.anydevprojects.simplepodcastapp.ui.theme.AppTheme
 
 @Composable
 fun BottomMediaPlayer(
@@ -35,61 +34,60 @@ fun BottomMediaPlayer(
     onPlaybackQueueBtnClick: () -> Unit,
     bottomPadding: Dp = 0.dp
 ) {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .background(color = Color.Gray)
-                .padding(16.dp)
-                .padding(bottom = bottomPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AsyncImage(
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(color = Color.Gray)
+            .padding(16.dp)
+            .padding(bottom = bottomPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(16.dp)),
+            model = imageUrl,
+            contentDescription = null
+        )
+        Text(
+            text = title,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .weight(1f),
+            overflow = TextOverflow.Ellipsis,
+            minLines = 2,
+            maxLines = 2
+        )
+        if (availablePlaybackQueue) {
+            IconButton(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(16.dp)),
-                model = imageUrl,
-                contentDescription = null
-            )
-            Text(
-                text = title,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .weight(1f),
-                overflow = TextOverflow.Ellipsis,
-                minLines = 2,
-                maxLines = 2
-            )
-            if (availablePlaybackQueue) {
-                IconButton(
-                    modifier = Modifier
-                        .padding(end = 16.dp),
-                    onClick = {
-                        onPlaybackQueueBtnClick()
-                    }
-                ) {
-                    Icon(
-                        modifier = Modifier,
-                        painter = painterResource(R.drawable.ic_queue_music),
-                        contentDescription = null,
-                        tint = Color.White
-                    )
+                    .padding(end = 16.dp),
+                onClick = {
+                    onPlaybackQueueBtnClick()
                 }
+            ) {
+                Icon(
+                    modifier = Modifier,
+                    painter = painterResource(R.drawable.ic_queue_music),
+                    contentDescription = null,
+                    tint = Color.White
+                )
             }
-
-            PlayControlIconBtn(
-                modifier = Modifier,
-                isPlaying = isPlaying,
-                onClick = onChangePlayState,
-                sizeIcon = 48.dp
-            )
         }
 
+        PlayControlIconBtn(
+            modifier = Modifier,
+            isPlaying = isPlaying,
+            onClick = onChangePlayState,
+            sizeIcon = 48.dp
+        )
+    }
 }
 
 @Preview
 @Composable
 private fun BottomMediaPlayerPreview() {
-    SimplePodcastAppTheme {
+    AppTheme {
         BottomMediaPlayer(
             imageUrl = "",
             title = "title",

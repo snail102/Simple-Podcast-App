@@ -35,7 +35,7 @@ import org.koin.androidx.compose.koinViewModel
 import ru.anydevprojects.simplepodcastapp.R
 import ru.anydevprojects.simplepodcastapp.playbackQueue.domain.models.MediaQueueItem
 import ru.anydevprojects.simplepodcastapp.playbackQueue.presentation.models.PlaybackQueueState
-import ru.anydevprojects.simplepodcastapp.ui.theme.SimplePodcastAppTheme
+import ru.anydevprojects.simplepodcastapp.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -154,7 +154,7 @@ private fun PlaybackQueueItem(
 @Preview
 @Composable
 private fun PlaybackQueueItemPreview() {
-    SimplePodcastAppTheme {
+    AppTheme {
         PlaybackQueueItem(
             onClick = {},
             item = MediaQueueItem(
