@@ -10,6 +10,7 @@ sealed interface PlayControlState : ViewState {
     data class Content(
         val episodeName: String = "",
         val imageUrl: String = "",
-        val isPlaying: Boolean = false
+        val isPlaying: Boolean = false,
+        val totalDuration: String = ""
     ) : PlayControlState, ContentViewState
 }

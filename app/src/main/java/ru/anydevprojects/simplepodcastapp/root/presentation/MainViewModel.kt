@@ -1,14 +1,6 @@
 package ru.anydevprojects.simplepodcastapp.root.presentation
 
 import android.util.Log
-import androidx.compose.material.BottomSheetScaffoldState
-import androidx.compose.material.BottomSheetState
-import androidx.compose.material.BottomSheetValue
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.rememberBottomSheetScaffoldState
-import androidx.compose.material.rememberBottomSheetState
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
@@ -16,13 +8,13 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.scan
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreenNavigation
 import ru.anydevprojects.simplepodcastapp.core.intentHandler.ResolvedIntentData
@@ -102,6 +94,16 @@ class MainViewModel(
                     )
                 }
             }.collect()
+        }
+
+        viewModelScope.launch {
+            mediaPlayerControl.progress.collect { progressPlaying ->
+                _playerControlState.update {
+                    it.copy(
+                        progress = progressPlaying
+                    )
+                }
+            }
         }
     }
 

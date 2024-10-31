@@ -394,7 +394,8 @@ private fun EpisodeItemPreview() {
                 description = "description",
                 isPlaying = false,
                 imageUrl = "",
-                audioUrl = ""
+                audioUrl = "",
+                duration = 0
             ),
             onClick = {}
         )

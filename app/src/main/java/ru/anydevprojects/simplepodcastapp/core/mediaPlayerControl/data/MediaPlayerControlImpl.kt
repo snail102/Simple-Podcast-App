@@ -30,11 +30,19 @@ class MediaPlayerControlImpl(
 
     private val _currentMedia: MutableStateFlow<MediaData> = MutableStateFlow(MediaData.Init)
     private val _playState: MutableStateFlow<PlayState> = MutableStateFlow(PlayState.Init)
+    private val _progress: MutableStateFlow<Float> = MutableStateFlow(0.0f)
+    private val _currentDuration: MutableStateFlow<Int> = MutableStateFlow(0)
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override val currentMedia: StateFlow<MediaData>
         get() = _currentMedia.asStateFlow()
+
+    override val progress: StateFlow<Float>
+        get() = _progress.asStateFlow()
+
+    override val currentDuration: StateFlow<Int>
+        get() = _currentDuration.asStateFlow()
 
     override val currentMediaContent: MediaData.Content?
         get() {
@@ -48,6 +56,8 @@ class MediaPlayerControlImpl(
 
     override val playState: StateFlow<PlayState>
         get() = _playState.asStateFlow()
+
+    private var duration: Int = 0
 
     init {
         scope.launch {
@@ -75,7 +85,19 @@ class MediaPlayerControlImpl(
                     }
 
                     is JetAudioState.Progress -> {
-                        Log.d("AudioService", "Progress ${mediaState.progress}")
+
+                        _progress.update {
+                            if (duration == 0) {
+                                0F
+                            } else {
+                                mediaState.progress.toFloat() / duration
+                            }
+                        }
+
+                        _currentDuration.update {
+                            mediaState.progress
+                        }
+                        Log.d("AudioService", "Progress ${mediaState.progress} ${_progress.value}")
                     }
 
                     is JetAudioState.CurrentPlaying -> {
@@ -98,8 +120,8 @@ class MediaPlayerControlImpl(
                             id = value.id.toLongOrNull()
                                 ?: throw Exception("id current media not long"),
                             title = value.title,
-                            imageUrl = value.imageUri?.toString().orEmpty()
-
+                            imageUrl = value.imageUri?.toString().orEmpty(),
+                            totalDurationMs = duration
                         )
                     }
                 }
@@ -126,6 +148,7 @@ class MediaPlayerControlImpl(
     override fun play(playMediaData: PlayMediaData) {
         scope.launch {
             val state = jetAudioServiceHandler.audioItemState.value
+            duration = playMediaData.duration * 1000
             if (state is AudioItemState.Current && state.id == playMediaData.id.toString()) {
                 jetAudioServiceHandler.onPlayerEvents(
                     PlayerEvent.PlayPause

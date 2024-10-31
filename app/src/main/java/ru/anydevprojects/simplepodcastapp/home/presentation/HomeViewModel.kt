@@ -41,6 +41,8 @@ class HomeViewModel(
         }
     ) {
 
+    val progressPlaying = mediaPlayerControl.progress
+
     override fun onStart() {
         super.onStart()
         fetchSubscriptionsPodcasts()
@@ -169,7 +171,8 @@ class HomeViewModel(
                     id = episodeUi.id,
                     title = episodeUi.title,
                     imageUrl = episodeUi.imageUrl,
-                    audioUrl = episodeUi.audioUrl
+                    audioUrl = episodeUi.audioUrl,
+                    duration = episodeUi.duration
                 )
             )
         }

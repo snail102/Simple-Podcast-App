@@ -458,7 +458,8 @@ private fun PodcastEpisodeItemPreview() {
                 description = "dsasd",
                 isPlaying = false,
                 audioUrl = "",
-                imageUrl = "https://img.transistor.fm/IQ-91nRR0Lx3sJv6RaaVAbKEc2Lzp2ttHJqC-vsbj1w/rs:fill:3000:3000:1/q:60/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS8yZGE2/ZTU4MWU1Y2NmOTBm/ODI1NmJhNjIzYzY2/YzAxYi5qcGc.jpg"
+                imageUrl = "https://img.transistor.fm/IQ-91nRR0Lx3sJv6RaaVAbKEc2Lzp2ttHJqC-vsbj1w/rs:fill:3000:3000:1/q:60/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS8yZGE2/ZTU4MWU1Y2NmOTBm/ODI1NmJhNjIzYzY2/YzAxYi5qcGc.jpg",
+                duration = 12313
             ),
             onClick = {},
             onPlayBtnClick = {}

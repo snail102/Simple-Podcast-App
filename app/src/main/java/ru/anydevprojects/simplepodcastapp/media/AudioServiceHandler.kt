@@ -2,9 +2,14 @@ package ru.anydevprojects.simplepodcastapp.media
 
 import android.content.ComponentName
 import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.annotation.OptIn
+import androidx.annotation.RequiresApi
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -58,6 +63,43 @@ class JetAudioServiceHandler(
     private var controller: MediaController? = null
 
     private var job: Job? = null
+
+    private val audioFocusListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_GAIN,
+            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT,
+            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE,
+            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK -> {
+                exoPlayer.play()
+            }
+
+            AudioManager.AUDIOFOCUS_LOSS,
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                exoPlayer.pause()
+            }
+
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                // audio focus loss, but maybe just set lower volume
+            }
+        }
+    }
+
+    private val audioAttributes = AudioAttributes.Builder()
+        .setUsage(AudioAttributes.USAGE_MEDIA)
+        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+        .build()
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+        .setAudioAttributes(audioAttributes)
+        .setOnAudioFocusChangeListener(audioFocusListener)
+        .build()
+
+    private val audioManager = applicationContext.getSystemService(AudioManager::class.java)
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val audioFocus = audioManager?.requestAudioFocus(audioFocusRequest)
 
     init {
 
@@ -144,7 +186,7 @@ class JetAudioServiceHandler(
         when (playbackState) {
             ExoPlayer.STATE_BUFFERING ->
                 _audioState.value =
-                    JetAudioState.Buffering(exoPlayer.currentPosition)
+                    JetAudioState.Buffering(exoPlayer.currentPosition.toInt())
 
             ExoPlayer.STATE_READY ->
                 _audioState.value =
@@ -202,7 +244,7 @@ class JetAudioServiceHandler(
     private suspend fun startProgressUpdate() = job.run {
         while (true) {
             delay(500)
-            _audioState.value = JetAudioState.Progress(exoPlayer.currentPosition)
+            _audioState.value = JetAudioState.Progress(exoPlayer.currentPosition.toInt())
         }
     }
 
@@ -232,8 +274,8 @@ sealed class PlayerEvent {
 sealed class JetAudioState {
     object Initial : JetAudioState()
     data class Ready(val duration: Long) : JetAudioState()
-    data class Progress(val progress: Long) : JetAudioState()
-    data class Buffering(val progress: Long) : JetAudioState()
+    data class Progress(val progress: Int) : JetAudioState()
+    data class Buffering(val progress: Int) : JetAudioState()
     data class Playing(val isPlaying: Boolean) : JetAudioState()
 
     data class CurrentPlaying(val mediaItemIndex: Int) : JetAudioState()

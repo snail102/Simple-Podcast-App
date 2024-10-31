@@ -9,6 +9,7 @@ sealed interface MediaData {
     data class Content(
         val id: Long,
         val title: String,
-        val imageUrl: String
+        val imageUrl: String,
+        val totalDurationMs: Int
     ) : MediaData
 }

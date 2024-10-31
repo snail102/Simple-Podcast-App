@@ -175,7 +175,6 @@ class MainActivity : ComponentActivity() {
                                                 timePosition = mutableStateOf(
                                                     TimePosition(
                                                         currentTime = "",
-                                                        totalTime = "",
                                                         trackPosition = 0.01F
                                                     )
                                                 ),

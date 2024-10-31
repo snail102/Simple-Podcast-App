@@ -3,6 +3,7 @@ package ru.anydevprojects.simplepodcastapp.playControl.presentation
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,17 +47,12 @@ fun PlayControlScreen(viewModel: PlayControlViewModel = koinViewModel()) {
 
     PlayControlScreenContent(
         isPlaying = state.isPlaying,
+        totalTime = state.totalDuration,
         onClick = {
             viewModel.onIntent(PlayControlIntent.OnChangePlayState)
         },
         nameEpisode = state.episodeName,
-        timePosition = mutableStateOf(
-            TimePosition(
-                currentTime = "1:1",
-                totalTime = "2:34",
-                trackPosition = 0.3F
-            )
-        ),
+        timePosition = viewModel.timePosition.collectAsState(),
         coverUrl = state.imageUrl,
         onChangeCurrentPositionMedia = {}
     )
@@ -64,6 +61,7 @@ fun PlayControlScreen(viewModel: PlayControlViewModel = koinViewModel()) {
 @Composable
 private fun PlayControlScreenContent(
     nameEpisode: String,
+    totalTime: String,
     timePosition: State<TimePosition>,
     isPlaying: Boolean,
     coverUrl: String,
@@ -80,10 +78,7 @@ private fun PlayControlScreenContent(
             Spacer(modifier = Modifier.height(100.dp))
 
             AsyncImage(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(16.dp)),
+                modifier = Modifier.clip(RoundedCornerShape(16.dp)),
                 model = coverUrl,
                 contentDescription = null
             )
@@ -103,6 +98,17 @@ private fun PlayControlScreenContent(
                 value = timePosition.value.trackPosition,
                 onValueChange = onChangeCurrentPositionMedia
             )
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(timePosition.value.currentTime)
+                Text(totalTime)
+            }
 
             Spacer(modifier = Modifier.height(64.dp))
 
@@ -194,7 +200,6 @@ private fun MiniPlayerPreview() {
             timePosition = mutableStateOf(
                 TimePosition(
                     currentTime = "",
-                    totalTime = "",
                     trackPosition = 0.01F
                 )
             ),
@@ -212,12 +217,12 @@ private fun PlayControlScreenContentPreview() {
     AppTheme {
         PlayControlScreenContent(
             isPlaying = false,
+            totalTime = "",
             onClick = {},
             nameEpisode = "name",
             timePosition = mutableStateOf(
                 TimePosition(
                     currentTime = "",
-                    totalTime = "",
                     trackPosition = 0F
                 )
             ),
