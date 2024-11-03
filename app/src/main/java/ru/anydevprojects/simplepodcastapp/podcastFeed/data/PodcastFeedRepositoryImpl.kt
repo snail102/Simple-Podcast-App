@@ -136,4 +136,10 @@ class PodcastFeedRepositoryImpl(
             fetchSubscriptionsPodcasts()
         }
     }
+
+    override suspend fun getPodcastNameByEpisodeIdFromLocal(id: Long): String {
+        return kotlin.runCatching {
+            podcastFeedDao.getPodcastNameByEpisodeId(id = id)
+        }.getOrNull()?.title.orEmpty()
+    }
 }

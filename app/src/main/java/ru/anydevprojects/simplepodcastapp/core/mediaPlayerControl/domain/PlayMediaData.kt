@@ -5,5 +5,5 @@ data class PlayMediaData(
     val title: String,
     val imageUrl: String,
     val audioUrl: String,
-    val duration: Int
+    val duration: Long
 )

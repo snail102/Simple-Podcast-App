@@ -8,7 +8,7 @@ data class PodcastEpisode(
     val enclosureUrl: String,
     val enclosureType: String,
     val enclosureLength: Int,
-    val duration: Int?,
+    val duration: Long?,
     val image: String,
     val feedId: Long
 )

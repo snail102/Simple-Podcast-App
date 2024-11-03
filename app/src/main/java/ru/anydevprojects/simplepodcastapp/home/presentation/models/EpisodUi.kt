@@ -7,5 +7,5 @@ data class PodcastEpisodeUi(
     val isPlaying: Boolean,
     val imageUrl: String,
     val audioUrl: String,
-    val duration: Int
+    val duration: Long
 ) : HomeScreenItem

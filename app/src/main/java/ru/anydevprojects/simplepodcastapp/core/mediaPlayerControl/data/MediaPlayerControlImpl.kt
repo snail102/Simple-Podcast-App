@@ -31,7 +31,7 @@ class MediaPlayerControlImpl(
     private val _currentMedia: MutableStateFlow<MediaData> = MutableStateFlow(MediaData.Init)
     private val _playState: MutableStateFlow<PlayState> = MutableStateFlow(PlayState.Init)
     private val _progress: MutableStateFlow<Float> = MutableStateFlow(0.0f)
-    private val _currentDuration: MutableStateFlow<Int> = MutableStateFlow(0)
+    private val _currentDuration: MutableStateFlow<Long> = MutableStateFlow(0)
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -41,7 +41,7 @@ class MediaPlayerControlImpl(
     override val progress: StateFlow<Float>
         get() = _progress.asStateFlow()
 
-    override val currentDuration: StateFlow<Int>
+    override val currentDuration: StateFlow<Long>
         get() = _currentDuration.asStateFlow()
 
     override val currentMediaContent: MediaData.Content?
@@ -57,7 +57,14 @@ class MediaPlayerControlImpl(
     override val playState: StateFlow<PlayState>
         get() = _playState.asStateFlow()
 
-    private var duration: Int = 0
+    override suspend fun moveTo(timeMs: Long) {
+        jetAudioServiceHandler.onPlayerEvents(
+            playerEvent = PlayerEvent.SeekTo,
+            seekPosition = timeMs
+        )
+    }
+
+    private var duration: Long = 0
 
     init {
         scope.launch {
@@ -87,7 +94,7 @@ class MediaPlayerControlImpl(
                     is JetAudioState.Progress -> {
 
                         _progress.update {
-                            if (duration == 0) {
+                            if (duration == 0L) {
                                 0F
                             } else {
                                 mediaState.progress.toFloat() / duration
@@ -100,9 +107,9 @@ class MediaPlayerControlImpl(
                         Log.d("AudioService", "Progress ${mediaState.progress} ${_progress.value}")
                     }
 
-                    is JetAudioState.CurrentPlaying -> {
-                        Log.d("AudioService", "CurrentPlaying ${mediaState.mediaItemIndex}")
-                    }
+//                    is JetAudioState.CurrentPlaying -> {
+//                        Log.d("AudioService", "CurrentPlaying ${mediaState.mediaItemIndex}")
+//                    }
 
                     is JetAudioState.Ready -> {
                         Log.d("AudioService", "Ready ${mediaState.duration}")

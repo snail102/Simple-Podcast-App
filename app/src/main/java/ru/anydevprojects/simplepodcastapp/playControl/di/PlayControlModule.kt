@@ -5,5 +5,5 @@ import org.koin.dsl.module
 import ru.anydevprojects.simplepodcastapp.playControl.presentation.PlayControlViewModel
 
 val playControlModule = module {
-    viewModel { PlayControlViewModel(get()) }
+    viewModel { PlayControlViewModel(get(), get()) }
 }

@@ -21,6 +21,7 @@ import androidx.compose.material.rememberBottomSheetState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +49,6 @@ import ru.anydevprojects.simplepodcastapp.home.presentation.HomeScreen
 import ru.anydevprojects.simplepodcastapp.home.presentation.HomeScreenNavigation
 import ru.anydevprojects.simplepodcastapp.playControl.presentation.MiniPlayer
 import ru.anydevprojects.simplepodcastapp.playControl.presentation.PlayControlScreen
-import ru.anydevprojects.simplepodcastapp.playControl.presentation.models.TimePosition
 import ru.anydevprojects.simplepodcastapp.playbackQueue.presentation.PlaybackQueueScreen
 import ru.anydevprojects.simplepodcastapp.playbackQueue.presentation.PlaybackQueueScreenNavigation
 import ru.anydevprojects.simplepodcastapp.podcastEpisode.presentation.PodcastEpisodeScreen
@@ -102,6 +102,8 @@ class MainActivity : ComponentActivity() {
             val playerControlState by viewModel.playerControlState.collectAsStateWithLifecycle()
 
             val navigationBars = WindowInsets.navigationBars.getBottom(density).pxToDp()
+
+            val trackPosition by viewModel.trackPosition.collectAsStateWithLifecycle()
 
             val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
                 bottomSheetState = rememberBottomSheetState(
@@ -157,6 +159,7 @@ class MainActivity : ComponentActivity() {
                                             currentFraction = bottomSheetScaffoldState.currentFraction,
                                             onSheetClick = {}
                                         ) {
+
                                             MiniPlayer(
                                                 modifier = Modifier
                                                     .clip(
@@ -170,14 +173,11 @@ class MainActivity : ComponentActivity() {
                                                     bottom = navigationBars
                                                 ),
                                                 isPlaying = playerControlState.isPlaying,
-                                                onClick = {},
+                                                onClick = {
+                                                    viewModel.onChangePlayState()
+                                                },
                                                 nameEpisode = playerControlState.title,
-                                                timePosition = mutableStateOf(
-                                                    TimePosition(
-                                                        currentTime = "",
-                                                        trackPosition = 0.01F
-                                                    )
-                                                ),
+                                                timePosition = trackPosition,
                                                 coverUrl = playerControlState.imageUrl
                                             )
                                         }

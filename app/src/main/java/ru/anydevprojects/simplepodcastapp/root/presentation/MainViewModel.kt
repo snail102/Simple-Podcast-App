@@ -8,12 +8,14 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.scan
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.anydevprojects.simplepodcastapp.authorization.presentaion.AuthorizationScreenNavigation
@@ -44,6 +46,16 @@ class MainViewModel(
 
     private val _graphInitialized: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val graphInitialized = _graphInitialized.asStateFlow()
+
+    val trackPosition = mediaPlayerControl.progress.stateIn(
+        scope = viewModelScope,
+        initialValue = 0f,
+        started = SharingStarted.Lazily
+    )
+
+    private val _trackControlState: MutableStateFlow<Float> =
+        MutableStateFlow(0f)
+    val trackControlState = _trackControlState.asStateFlow()
 
     private val _playerControlState: MutableStateFlow<PlayerControlState> =
         MutableStateFlow(PlayerControlState())
@@ -97,12 +109,11 @@ class MainViewModel(
         }
 
         viewModelScope.launch {
-            mediaPlayerControl.progress.collect { progressPlaying ->
-                _playerControlState.update {
-                    it.copy(
-                        progress = progressPlaying
-                    )
-                }
+            _trackControlState.update {
+                it
+            }
+            trackPosition.collect {
+                Log.d("tetewtwtg", it.toString())
             }
         }
     }
@@ -180,5 +191,9 @@ class MainViewModel(
 
     fun startDestinationInitialized() {
         _graphInitialized.value = true
+    }
+
+    fun onChangePlayState() {
+        mediaPlayerControl.changePlayStatus()
     }
 }

@@ -186,7 +186,7 @@ class JetAudioServiceHandler(
         when (playbackState) {
             ExoPlayer.STATE_BUFFERING ->
                 _audioState.value =
-                    JetAudioState.Buffering(exoPlayer.currentPosition.toInt())
+                    JetAudioState.Buffering(exoPlayer.currentPosition)
 
             ExoPlayer.STATE_READY ->
                 _audioState.value =
@@ -209,9 +209,9 @@ class JetAudioServiceHandler(
             imageUri = exoPlayer.mediaMetadata.artworkUri
         )
 
-        _audioState.value = JetAudioState.CurrentPlaying(
-            exoPlayer.currentMediaItemIndex
-        )
+//        _audioState.value = JetAudioState.CurrentPlaying(
+//            exoPlayer.currentMediaItemIndex
+//        )
         if (isPlaying) {
             GlobalScope.launch(Dispatchers.Main) {
                 startProgressUpdate()
@@ -244,7 +244,7 @@ class JetAudioServiceHandler(
     private suspend fun startProgressUpdate() = job.run {
         while (true) {
             delay(500)
-            _audioState.value = JetAudioState.Progress(exoPlayer.currentPosition.toInt())
+            _audioState.value = JetAudioState.Progress(exoPlayer.currentPosition)
         }
     }
 
@@ -274,11 +274,11 @@ sealed class PlayerEvent {
 sealed class JetAudioState {
     object Initial : JetAudioState()
     data class Ready(val duration: Long) : JetAudioState()
-    data class Progress(val progress: Int) : JetAudioState()
-    data class Buffering(val progress: Int) : JetAudioState()
+    data class Progress(val progress: Long) : JetAudioState()
+    data class Buffering(val progress: Long) : JetAudioState()
     data class Playing(val isPlaying: Boolean) : JetAudioState()
 
-    data class CurrentPlaying(val mediaItemIndex: Int) : JetAudioState()
+    // data class CurrentPlaying(val mediaItemIndex: Int) : JetAudioState()
 }
 
 sealed class AudioItemState {

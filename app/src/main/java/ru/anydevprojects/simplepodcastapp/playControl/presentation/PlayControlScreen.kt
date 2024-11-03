@@ -1,7 +1,9 @@
 package ru.anydevprojects.simplepodcastapp.playControl.presentation
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,11 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -31,6 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -38,6 +42,7 @@ import coil.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
 import ru.anydevprojects.simplepodcastapp.playControl.presentation.models.PlayControlIntent
 import ru.anydevprojects.simplepodcastapp.playControl.presentation.models.TimePosition
+import ru.anydevprojects.simplepodcastapp.playControl.presentation.ui.LineSlider
 import ru.anydevprojects.simplepodcastapp.ui.components.PlayControlIconBtn
 import ru.anydevprojects.simplepodcastapp.ui.theme.AppTheme
 
@@ -51,22 +56,31 @@ fun PlayControlScreen(viewModel: PlayControlViewModel = koinViewModel()) {
         onClick = {
             viewModel.onIntent(PlayControlIntent.OnChangePlayState)
         },
-        nameEpisode = state.episodeName,
+        podcastName = state.podcastName,
+        episodeName = state.episodeName,
         timePosition = viewModel.timePosition.collectAsState(),
         coverUrl = state.imageUrl,
-        onChangeCurrentPositionMedia = {}
+        onChangeCurrentPositionMedia = {
+            viewModel.onIntent(PlayControlIntent.OnChangeCurrentPlayPosition(it))
+        },
+        onChangeFinishedCurrentPositionMedia = {
+            viewModel.onIntent(PlayControlIntent.OnChangeFinishedCurrentPositionMedia)
+        }
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayControlScreenContent(
-    nameEpisode: String,
+    podcastName: String,
+    episodeName: String,
     totalTime: String,
     timePosition: State<TimePosition>,
     isPlaying: Boolean,
     coverUrl: String,
     onClick: () -> Unit,
-    onChangeCurrentPositionMedia: (Float) -> Unit
+    onChangeCurrentPositionMedia: (Float) -> Unit,
+    onChangeFinishedCurrentPositionMedia: () -> Unit
 ) {
     Scaffold { paddingValues ->
         Column(
@@ -75,7 +89,16 @@ private fun PlayControlScreenContent(
                 .padding(start = 16.dp, bottom = 16.dp, end = 16.dp, top = 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(70.dp))
+
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = podcastName,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             AsyncImage(
                 modifier = Modifier.clip(RoundedCornerShape(16.dp)),
@@ -86,18 +109,27 @@ private fun PlayControlScreenContent(
             Spacer(modifier = Modifier.height(32.dp))
             Text(
                 modifier = Modifier.fillMaxWidth(),
-                text = nameEpisode,
+                text = episodeName,
                 style = MaterialTheme.typography.bodyLarge,
-                maxLines = 2
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Slider(
+//            Slider(
+//                modifier = Modifier.fillMaxWidth(),
+//                value = timePosition.value.trackPosition,
+//                onValueChange = onChangeCurrentPositionMedia
+//            )
+
+            LineSlider(
                 modifier = Modifier.fillMaxWidth(),
                 value = timePosition.value.trackPosition,
-                onValueChange = onChangeCurrentPositionMedia
+                onValueChange = onChangeCurrentPositionMedia,
+                onValueChangeFinished = onChangeFinishedCurrentPositionMedia
             )
+
             Spacer(
                 modifier = Modifier.height(4.dp)
             )
@@ -114,7 +146,6 @@ private fun PlayControlScreenContent(
 
             PlayControlIconBtn(
                 modifier = Modifier.size(80.dp),
-                sizeIcon = 64.dp,
                 isPlaying = isPlaying,
                 onClick = onClick
             )
@@ -124,19 +155,21 @@ private fun PlayControlScreenContent(
 }
 
 @Composable
-fun MiniPlayer(
+fun  MiniPlayer(
     nameEpisode: String,
-    timePosition: State<TimePosition>,
+    timePosition: Float,
     isPlaying: Boolean,
     coverUrl: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues()
 ) {
-    var progress by remember { mutableFloatStateOf(timePosition.value.trackPosition) }
+
     val animatedProgress = animateFloatAsState(
-        targetValue = progress,
-        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
+        targetValue = timePosition,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy
+        ),
         label = ""
     ).value
 
@@ -192,22 +225,19 @@ fun MiniPlayer(
 @Preview
 @Composable
 private fun MiniPlayerPreview() {
-    AppTheme {
-        MiniPlayer(
-            isPlaying = false,
-            onClick = {},
-            nameEpisode = "name sabdbadb sahdbasdb asdbaj sduhab dsaib dsiabd ab sdaibsd n",
-            timePosition = mutableStateOf(
-                TimePosition(
-                    currentTime = "",
-                    trackPosition = 0.01F
-                )
-            ),
-            coverUrl = "",
-            modifier = Modifier.height(100.dp),
-            paddingValues = PaddingValues(bottom = 24.dp)
-        )
-    }
+//    AppTheme {
+//        MiniPlayer(
+//            isPlaying = false,
+//            onClick = {},
+//            nameEpisode = "name sabdbadb sahdbasdb asdbaj sduhab dsaib dsiabd ab sdaibsd n",
+//            timePosition = mutableStateOf(
+//              0f
+//            ),
+//            coverUrl = "",
+//            modifier = Modifier.height(100.dp),
+//            paddingValues = PaddingValues(bottom = 24.dp)
+//        )
+//    }
 }
 
 @SuppressLint("UnrememberedMutableState")
@@ -219,7 +249,7 @@ private fun PlayControlScreenContentPreview() {
             isPlaying = false,
             totalTime = "",
             onClick = {},
-            nameEpisode = "name",
+            episodeName = "name",
             timePosition = mutableStateOf(
                 TimePosition(
                     currentTime = "",
@@ -227,7 +257,9 @@ private fun PlayControlScreenContentPreview() {
                 )
             ),
             coverUrl = "",
-            onChangeCurrentPositionMedia = {}
+            onChangeCurrentPositionMedia = {},
+            onChangeFinishedCurrentPositionMedia = {}, podcastName = "122131"
+
         )
     }
 }

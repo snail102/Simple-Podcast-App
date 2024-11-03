@@ -26,4 +26,6 @@ interface PodcastFeedRepository {
     suspend fun unsubscribeOnPodcast(podcastId: Long): Result<Unit>
 
     suspend fun importPodcasts(podcastUrls: List<String>): Result<Unit>
+
+    suspend fun getPodcastNameByEpisodeIdFromLocal(id: Long): String
 }

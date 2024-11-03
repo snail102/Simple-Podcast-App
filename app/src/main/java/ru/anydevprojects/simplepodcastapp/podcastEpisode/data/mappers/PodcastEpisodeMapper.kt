@@ -12,7 +12,7 @@ fun PodcastEpisodeDto.toDomain(): PodcastEpisode = PodcastEpisode(
     enclosureUrl = this.enclosureUrl,
     enclosureType = this.enclosureType,
     enclosureLength = this.enclosureLength,
-    duration = this.duration,
+    duration = this.duration?.toLong(),
     image = this.image.ifEmpty { this.feedImage },
     feedId = this.feedId
 )
@@ -25,7 +25,7 @@ fun PodcastEpisodeEntity.toDomain(): PodcastEpisode = PodcastEpisode(
     enclosureUrl = this.enclosureUrl,
     enclosureType = this.enclosureType,
     enclosureLength = this.enclosureLength,
-    duration = this.duration,
+    duration = this.duration?.toLong(),
     image = this.image,
     feedId = this.feedId
 )
@@ -38,7 +38,7 @@ fun PodcastEpisode.toEntity(): PodcastEpisodeEntity = PodcastEpisodeEntity(
     enclosureUrl = this.enclosureUrl,
     enclosureType = this.enclosureType,
     enclosureLength = this.enclosureLength,
-    duration = this.duration,
+    duration = this.duration?.toInt(),
     image = this.image,
     feedId = this.feedId
 )

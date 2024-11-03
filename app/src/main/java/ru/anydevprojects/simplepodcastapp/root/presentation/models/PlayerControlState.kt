@@ -4,6 +4,5 @@ data class PlayerControlState(
     val isEnabled: Boolean = false,
     val imageUrl: String = "",
     val title: String = "",
-    val isPlaying: Boolean = false,
-    val progress: Float = 0.0f
+    val isPlaying: Boolean = false
 )

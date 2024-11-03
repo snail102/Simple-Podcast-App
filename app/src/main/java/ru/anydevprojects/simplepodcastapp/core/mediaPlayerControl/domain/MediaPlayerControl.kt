@@ -8,11 +8,13 @@ interface MediaPlayerControl {
 
     val progress: StateFlow<Float>
 
-    val currentDuration: StateFlow<Int>
+    val currentDuration: StateFlow<Long>
 
     val currentMediaContent: MediaData.Content?
 
     val playState: StateFlow<PlayState>
+
+    suspend fun moveTo(timeMs: Long)
 
     fun play(playMediaData: PlayMediaData)
 

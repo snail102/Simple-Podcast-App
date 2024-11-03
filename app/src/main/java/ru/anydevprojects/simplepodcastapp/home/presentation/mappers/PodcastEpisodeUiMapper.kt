@@ -11,6 +11,6 @@ fun PodcastEpisode.toUi(isPlaying: Boolean): PodcastEpisodeUi {
         isPlaying = isPlaying,
         imageUrl = this.image,
         audioUrl = this.enclosureUrl,
-        duration = this.duration ?: 0
+        duration = this.duration ?: 0L
     )
 }
